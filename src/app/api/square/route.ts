@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
   sql += ' ORDER BY id DESC';
   const users = db.prepare(sql).all(...params).map((u: Record<string, unknown>) => ({
     ...u,
-    life_photos: u.life_photos ? JSON.parse(u.life_photos) : []
+    life_photos: u.life_photos ? JSON.parse(u.life_photos as string) : []
   }));
   return NextResponse.json({ users });
 } 
