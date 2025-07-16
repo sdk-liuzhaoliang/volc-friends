@@ -110,7 +110,7 @@ export default function ProfilePage() {
           education_privacy: privacy.education,
           avatar: avatarUrlToUse,
           life_photos: lifePhotoUrlsToUse,
-          is_public: form.is_public === "1"
+          is_public: form.is_public === "1" || form.is_public === 1 || form.is_public === true
         })
       });
       const data = await res.json();
