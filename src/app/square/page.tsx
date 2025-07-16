@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Dialog, DialogTitle, DialogContent, DialogActions, Drawer } from "@mui/material";
+import type { User } from "@/types/user";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
 const genderOptions = [
@@ -11,7 +12,7 @@ const genderOptions = [
 ];
 
 export default function SquarePage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     gender: '',
@@ -21,11 +22,11 @@ export default function SquarePage() {
     maxHeight: '',
     education: '',
   });
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const fetchUsers = async (params = {}) => {
+  const fetchUsers = async (params: Record<string, string> = {}) => {
     setLoading(true);
-    const query = new URLSearchParams(params as any).toString();
+    const query = new URLSearchParams(params).toString();
     const res = await fetch(`/api/square${query ? '?' + query : ''}`);
     const data = await res.json();
     setUsers(data.users || []);
@@ -37,7 +38,7 @@ export default function SquarePage() {
     // eslint-disable-next-line
   }, []);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any) => {
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
@@ -45,7 +46,7 @@ export default function SquarePage() {
     fetchUsers(filters);
   };
 
-  const displayValue = (val: any, privacy: string | undefined) => {
+  const displayValue = (val: unknown, privacy: string | undefined) => {
     if (privacy === 'private') return '***';
     if (val === undefined || val === null || val === '') return '***';
     return val;

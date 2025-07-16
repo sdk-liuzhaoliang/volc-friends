@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -93,8 +93,12 @@ export default function RegisterPage() {
       } else {
         setError(data.error || '注册失败');
       }
-    } catch (e: any) {
-      setError(e.message || '注册失败');
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || '注册失败');
+      } else {
+        setError('注册失败');
+      }
     } finally {
       setLoading(false);
     }

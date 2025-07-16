@@ -3,13 +3,14 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, TextField, Typography, Avatar, Grid, IconButton, FormControl, InputLabel, Select, MenuItem, CircularProgress, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { useRouter } from "next/navigation";
+import type { User } from "@/types/user";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
-  const [form, setForm] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [form, setForm] = useState<Partial<User> | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [lifePhotos, setLifePhotos] = useState<File[]>([]);
@@ -39,8 +40,8 @@ export default function ProfilePage() {
     });
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value } as Partial<User>);
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,8 +111,12 @@ export default function ProfilePage() {
       } else {
         setError(data.error || '保存失败');
       }
-    } catch (e: any) {
-      setError(e.message || '保存失败');
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || '保存失败');
+      } else {
+        setError('保存失败');
+      }
     } finally {
       setSaving(false);
     }

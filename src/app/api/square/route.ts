@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const education = searchParams.get('education');
 
   let sql = 'SELECT id, nickname, gender, age, age_privacy, height, height_privacy, education, education_privacy, email, email_privacy, avatar, life_photos, description FROM users WHERE is_public = 1';
-  const params: any[] = [];
+  const params: unknown[] = [];
   if (gender) {
     sql += ' AND gender = ?';
     params.push(gender);

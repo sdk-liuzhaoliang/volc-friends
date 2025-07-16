@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton } from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import type { User } from "@/types/user";
 
 export function VolcanoIcon({ size = 32, ...props }: { size?: number, [key: string]: any }) {
   return (
@@ -17,7 +18,7 @@ export function VolcanoIcon({ size = 32, ...props }: { size?: number, [key: stri
 
 export default function NavBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
