@@ -8,8 +8,8 @@ function getUserIdFromRequest(req: NextRequest): number | null {
   const token = req.cookies.get('token')?.value;
   if (!token) return null;
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any;
-    return payload.id;
+    const payload = jwt.verify(token, JWT_SECRET) as Record<string, unknown>;
+    return typeof payload.id === 'number' ? payload.id : null;
   } catch {
     return null;
   }

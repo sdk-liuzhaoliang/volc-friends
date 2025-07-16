@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Dialog, DialogTitle, DialogContent, DialogActions, Drawer } from "@mui/material";
+import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Drawer } from "@mui/material";
 import type { User } from "@/types/user";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
@@ -38,8 +38,12 @@ export default function SquarePage() {
     // eslint-disable-next-line
   }, []);
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
+  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const name = e.target.name as string;
+    setFilters({ ...filters, [name]: e.target.value });
   };
 
   const handleSearch = () => {
@@ -58,17 +62,17 @@ export default function SquarePage() {
       <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>性别</InputLabel>
-          <Select name="gender" value={filters.gender} label="性别" onChange={handleFilterChange}>
+          <Select name="gender" value={filters.gender} label="性别" onChange={handleSelectChange}>
             {genderOptions.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
           </Select>
         </FormControl>
-        <TextField label="最小年龄" name="minAge" value={filters.minAge} onChange={handleFilterChange} type="number" sx={{ width: 100 }} />
-        <TextField label="最大年龄" name="maxAge" value={filters.maxAge} onChange={handleFilterChange} type="number" sx={{ width: 100 }} />
-        <TextField label="最小身高" name="minHeight" value={filters.minHeight} onChange={handleFilterChange} type="number" sx={{ width: 100 }} />
-        <TextField label="最大身高" name="maxHeight" value={filters.maxHeight} onChange={handleFilterChange} type="number" sx={{ width: 100 }} />
+        <TextField label="最小年龄" name="minAge" value={filters.minAge} onChange={handleInputChange} type="number" sx={{ width: 100 }} />
+        <TextField label="最大年龄" name="maxAge" value={filters.maxAge} onChange={handleInputChange} type="number" sx={{ width: 100 }} />
+        <TextField label="最小身高" name="minHeight" value={filters.minHeight} onChange={handleInputChange} type="number" sx={{ width: 100 }} />
+        <TextField label="最大身高" name="maxHeight" value={filters.maxHeight} onChange={handleInputChange} type="number" sx={{ width: 100 }} />
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>学历</InputLabel>
-          <Select name="education" value={filters.education} label="学历" onChange={handleFilterChange}>
+          <Select name="education" value={filters.education} label="学历" onChange={handleSelectChange}>
             <MenuItem value="">全部</MenuItem>
             {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </Select>

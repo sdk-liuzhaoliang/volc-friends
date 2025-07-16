@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, RadioGroup, FormControlLabel, Radio, InputLabel, MenuItem, Select, FormControl, Avatar, Grid, IconButton, CircularProgress } from "@mui/material";
+import { Box, Button, TextField, Typography, InputLabel, MenuItem, Select, FormControl, Avatar, Grid, IconButton, CircularProgress } from "@mui/material";
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { useRouter } from "next/navigation";
 
@@ -27,8 +27,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const name = e.target.name as string;
+    setForm({ ...form, [name]: e.target.value });
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,30 +122,30 @@ export default function RegisterPage() {
     <Box maxWidth={500} mx="auto" mt={4} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff">
       <Typography variant="h5" mb={2}>注册账号</Typography>
       <form onSubmit={handleSubmit}>
-        <TextField label="用户名" name="username" value={form.username} onChange={handleChange} fullWidth margin="normal" required />
-        <TextField label="密码" name="password" value={form.password} onChange={handleChange} fullWidth margin="normal" required type="password" />
-        <TextField label="昵称" name="nickname" value={form.nickname} onChange={handleChange} fullWidth margin="normal" required />
+        <TextField label="用户名" name="username" value={form.username} onChange={handleInputChange} fullWidth margin="normal" required />
+        <TextField label="密码" name="password" value={form.password} onChange={handleInputChange} fullWidth margin="normal" required type="password" />
+        <TextField label="昵称" name="nickname" value={form.nickname} onChange={handleInputChange} fullWidth margin="normal" required />
         <FormControl fullWidth margin="normal">
           <InputLabel>性别</InputLabel>
-          <Select name="gender" value={form.gender} label="性别" onChange={handleChange} required>
+          <Select name="gender" value={form.gender} label="性别" onChange={handleSelectChange} required>
             <MenuItem value="male">男</MenuItem>
             <MenuItem value="female">女</MenuItem>
             <MenuItem value="other">其他</MenuItem>
           </Select>
         </FormControl>
-        <TextField label="年龄（选填）" name="age" value={form.age} onChange={handleChange} fullWidth margin="normal" type="number" inputProps={{ min: 18, max: 100 }} />
-        <TextField label="身高(cm, 选填)" name="height" value={form.height} onChange={handleChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
+        <TextField label="年龄（选填）" name="age" value={form.age} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 18, max: 100 }} />
+        <TextField label="身高(cm, 选填)" name="height" value={form.height} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
         <FormControl fullWidth margin="normal">
           <InputLabel>学历（选填）</InputLabel>
-          <Select name="education" value={form.education} label="学历（选填）" onChange={handleChange}>
+          <Select name="education" value={form.education} label="学历（选填）" onChange={handleSelectChange}>
             <MenuItem value="">未填写</MenuItem>
             {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
-        <TextField label="个人描述" name="description" value={form.description} onChange={handleChange} fullWidth margin="normal" required multiline rows={3} />
+        <TextField label="个人描述" name="description" value={form.description} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
         <FormControl fullWidth margin="normal">
           <InputLabel>是否公开</InputLabel>
-          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleChange} required>
+          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleSelectChange} required>
             <MenuItem value="1">公开</MenuItem>
             <MenuItem value="0">隐藏</MenuItem>
           </Select>

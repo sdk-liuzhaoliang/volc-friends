@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     params.push(education);
   }
   sql += ' ORDER BY id DESC';
-  const users = db.prepare(sql).all(...params).map((u: any) => ({
+  const users = db.prepare(sql).all(...params).map((u: Record<string, unknown>) => ({
     ...u,
     life_photos: u.life_photos ? JSON.parse(u.life_photos) : []
   }));

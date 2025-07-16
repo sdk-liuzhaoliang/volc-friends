@@ -37,8 +37,12 @@ export default function LoginPage() {
       } else {
         setError(data.error || "登录失败");
       }
-    } catch (e: any) {
-      setError(e.message || "登录失败");
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || "登录失败");
+      } else {
+        setError("登录失败");
+      }
     } finally {
       setLoading(false);
     }

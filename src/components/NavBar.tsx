@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import type { User } from "@/types/user";
 
-export function VolcanoIcon({ size = 32, ...props }: { size?: number, [key: string]: any }) {
+export function VolcanoIcon({ size = 32, ...props }: { size?: number } & React.SVGProps<SVGSVGElement>) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       {/* 宽胖火山主体 */}

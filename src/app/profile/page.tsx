@@ -9,7 +9,6 @@ const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博�
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [form, setForm] = useState<Partial<User> | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -27,7 +26,6 @@ export default function ProfilePage() {
         return;
       }
       const data = await res.json();
-      setUser(data.user);
       setForm({ ...data.user, is_public: data.user.is_public ? "1" : "0" });
       setAvatarUrl(data.user.avatar);
       setLifePhotoUrls(data.user.life_photos || []);
@@ -40,8 +38,18 @@ export default function ProfilePage() {
     });
   }, [router]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value } as Partial<User>);
+  };
+  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+    const name = e.target.name as string;
+    setForm({ ...form, [name]: e.target.value } as Partial<User>);
+  };
+  const handleRadioChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>, value: string) => {
+    setPrivacy({ ...privacy, [field]: value });
+    if (value === 'private') {
+      setForm({ ...form, [field]: '' } as Partial<User>);
+    }
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,29 +136,29 @@ export default function ProfilePage() {
     <Box maxWidth={600} mx="auto" mt={4} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff">
       <Typography variant="h5" mb={2}>我的信息</Typography>
       <form onSubmit={handleSave}>
-        <TextField label="联系邮箱" name="email" value={form.email} onChange={handleChange} fullWidth margin="normal" required />
-        <TextField label="昵称" name="nickname" value={form.nickname} onChange={handleChange} fullWidth margin="normal" required />
+        <TextField label="联系邮箱" name="email" value={form.email} onChange={handleInputChange} fullWidth margin="normal" required />
+        <TextField label="昵称" name="nickname" value={form.nickname} onChange={handleInputChange} fullWidth margin="normal" required />
         <FormControl fullWidth margin="normal">
           <InputLabel>性别</InputLabel>
-          <Select name="gender" value={form.gender} label="性别" onChange={handleChange} required>
+          <Select name="gender" value={form.gender} label="性别" onChange={handleSelectChange} required>
             <MenuItem value="male">男</MenuItem>
             <MenuItem value="female">女</MenuItem>
             <MenuItem value="other">其他</MenuItem>
           </Select>
         </FormControl>
         <Box display="flex" alignItems="center" gap={2}>
-          <TextField label="年龄" name="age" value={form.age} onChange={handleChange} fullWidth margin="normal" type="number" inputProps={{ min: 18, max: 100 }} />
+          <TextField label="年龄" name="age" value={form.age} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 18, max: 100 }} />
           <FormControl component="fieldset" sx={{ mt: 2 }}>
-            <RadioGroup row value={privacy.age} onChange={e => handlePrivacyChange('age', e.target.value)}>
+            <RadioGroup row value={privacy.age} onChange={handleRadioChange('age')}>
               <FormControlLabel value="public" control={<Radio />} label="公开" />
               <FormControlLabel value="private" control={<Radio />} label="保密" />
             </RadioGroup>
           </FormControl>
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
-          <TextField label="身高(cm)" name="height" value={form.height} onChange={handleChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
+          <TextField label="身高(cm)" name="height" value={form.height} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
           <FormControl component="fieldset" sx={{ mt: 2 }}>
-            <RadioGroup row value={privacy.height} onChange={e => handlePrivacyChange('height', e.target.value)}>
+            <RadioGroup row value={privacy.height} onChange={handleRadioChange('height')}>
               <FormControlLabel value="public" control={<Radio />} label="公开" />
               <FormControlLabel value="private" control={<Radio />} label="保密" />
             </RadioGroup>
@@ -159,21 +167,21 @@ export default function ProfilePage() {
         <Box display="flex" alignItems="center" gap={2}>
           <FormControl fullWidth margin="normal">
             <InputLabel>学历</InputLabel>
-            <Select name="education" value={form.education} label="学历" onChange={handleChange}>
+            <Select name="education" value={form.education} label="学历" onChange={handleSelectChange}>
               {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
             </Select>
           </FormControl>
           <FormControl component="fieldset" sx={{ mt: 2 }}>
-            <RadioGroup row value={privacy.education} onChange={e => handlePrivacyChange('education', e.target.value)}>
+            <RadioGroup row value={privacy.education} onChange={handleRadioChange('education')}>
               <FormControlLabel value="public" control={<Radio />} label="公开" />
               <FormControlLabel value="private" control={<Radio />} label="保密" />
             </RadioGroup>
           </FormControl>
         </Box>
-        <TextField label="个人描述" name="description" value={form.description} onChange={handleChange} fullWidth margin="normal" required multiline rows={3} />
+        <TextField label="个人描述" name="description" value={form.description} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
         <FormControl fullWidth margin="normal">
           <InputLabel>是否公开</InputLabel>
-          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleChange} required>
+          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleSelectChange} required>
             <MenuItem value="1">公开</MenuItem>
             <MenuItem value="0">隐藏</MenuItem>
           </Select>
