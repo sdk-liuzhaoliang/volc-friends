@@ -214,7 +214,9 @@ export default function ProfilePage() {
           </label>
           <Grid container spacing={1} mt={1}>
             {lifePhotoUrls.map((url, idx) => (
-              <Grid item key={idx}><Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} /></Grid>
+              <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1 }}>
+                <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+              </Box>
             ))}
           </Grid>
         </Box>
