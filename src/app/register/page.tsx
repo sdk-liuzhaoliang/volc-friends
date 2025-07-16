@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Box, Button, TextField, Typography, InputLabel, MenuItem, Select, FormControl, Avatar, Grid, IconButton, CircularProgress } from "@mui/material";
+import { Box, Button, TextField, Typography, InputLabel, MenuItem, Select, FormControl, Avatar, Grid, IconButton, CircularProgress, SelectChangeEvent } from "@mui/material";
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { useRouter } from "next/navigation";
 
@@ -29,10 +29,6 @@ export default function RegisterPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-    const name = e.target.name as string;
-    setForm({ ...form, [name]: e.target.value });
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +104,16 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGenderChange = (e: SelectChangeEvent<string>) => {
+    setForm({ ...form, gender: e.target.value });
+  };
+  const handleEducationChange = (e: SelectChangeEvent<string>) => {
+    setForm({ ...form, education: e.target.value });
+  };
+  const handleIsPublicChange = (e: SelectChangeEvent<string>) => {
+    setForm({ ...form, is_public: e.target.value });
+  };
+
   if (success) {
     return (
       <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" textAlign="center">
@@ -127,7 +133,7 @@ export default function RegisterPage() {
         <TextField label="昵称" name="nickname" value={form.nickname} onChange={handleInputChange} fullWidth margin="normal" required />
         <FormControl fullWidth margin="normal">
           <InputLabel>性别</InputLabel>
-          <Select name="gender" value={form.gender} label="性别" onChange={handleSelectChange} required>
+          <Select name="gender" value={form.gender} label="性别" onChange={handleGenderChange} required>
             <MenuItem value="male">男</MenuItem>
             <MenuItem value="female">女</MenuItem>
             <MenuItem value="other">其他</MenuItem>
@@ -137,7 +143,7 @@ export default function RegisterPage() {
         <TextField label="身高(cm, 选填)" name="height" value={form.height} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
         <FormControl fullWidth margin="normal">
           <InputLabel>学历（选填）</InputLabel>
-          <Select name="education" value={form.education} label="学历（选填）" onChange={handleSelectChange}>
+          <Select name="education" value={form.education} label="学历（选填）" onChange={handleEducationChange}>
             <MenuItem value="">未填写</MenuItem>
             {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </Select>
@@ -145,7 +151,7 @@ export default function RegisterPage() {
         <TextField label="个人描述" name="description" value={form.description} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
         <FormControl fullWidth margin="normal">
           <InputLabel>是否公开</InputLabel>
-          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleSelectChange} required>
+          <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleIsPublicChange} required>
             <MenuItem value="1">公开</MenuItem>
             <MenuItem value="0">隐藏</MenuItem>
           </Select>
@@ -170,7 +176,9 @@ export default function RegisterPage() {
           </label>
           <Grid container spacing={1} mt={1}>
             {lifePhotoUrls.map((url, idx) => (
-              <Grid key={idx} item><Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} /></Grid>
+              <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1 }}>
+                <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+              </Box>
             ))}
           </Grid>
         </Box>
