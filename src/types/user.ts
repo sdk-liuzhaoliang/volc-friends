@@ -14,7 +14,7 @@ export interface User {
   avatar: string;
   life_photos: string[];
   description: string;
-  is_public: boolean;
+  is_public: string;
   created_at?: string;
   last_login?: string;
 } 
