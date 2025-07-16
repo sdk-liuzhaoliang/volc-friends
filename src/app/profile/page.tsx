@@ -4,6 +4,7 @@ import { Box, Button, TextField, Typography, Avatar, Grid, IconButton, FormContr
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { useRouter } from "next/navigation";
 import type { User } from "@/types/user";
+import type { SelectChangeEvent } from "@mui/material/Select";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
 
@@ -41,7 +42,7 @@ export default function ProfilePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value } as Partial<User>);
   };
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+  const handleSelectChange = (e: SelectChangeEvent) => {
     const name = e.target.name as string;
     setForm({ ...form, [name]: e.target.value } as Partial<User>);
   };
