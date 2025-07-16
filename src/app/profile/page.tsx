@@ -10,7 +10,7 @@ const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博�
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [form, setForm] = useState<Partial<User> | null>(null);
+  const [form, setForm] = useState<(Partial<User> & { is_public?: string }) | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [lifePhotos, setLifePhotos] = useState<File[]>([]);
@@ -27,7 +27,7 @@ export default function ProfilePage() {
         return;
       }
       const data = await res.json();
-      setForm({ ...data.user, is_public: data.user.is_public ? "1" : "0" });
+      setForm({ ...(data.user as any), is_public: data.user.is_public ? "1" : "0" });
       setAvatarUrl(data.user.avatar);
       setLifePhotoUrls(data.user.life_photos || []);
       setPrivacy({
@@ -44,7 +44,7 @@ export default function ProfilePage() {
   };
   const handleSelectChange = (e: SelectChangeEvent) => {
     const name = e.target.name as string;
-    setForm({ ...form, [name]: e.target.value } as Partial<User>);
+    setForm({ ...form, [name]: e.target.value } as (Partial<User> & { is_public?: string }));
   };
   const handleRadioChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>, value: string) => {
     setPrivacy({ ...privacy, [field]: value });
@@ -111,7 +111,7 @@ export default function ProfilePage() {
           education_privacy: privacy.education,
           avatar: avatarUrlToUse,
           life_photos: lifePhotoUrlsToUse,
-          is_public: ["1", 1, true].includes(form.is_public as string | number | boolean)
+          is_public: form.is_public === "1"
         })
       });
       const data = await res.json();
