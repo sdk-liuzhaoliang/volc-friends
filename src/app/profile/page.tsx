@@ -85,6 +85,7 @@ export default function ProfilePage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form) return;
     setError("");
     setSaving(true);
     try {
