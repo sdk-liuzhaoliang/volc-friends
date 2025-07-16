@@ -27,7 +27,7 @@ export default function ProfilePage() {
         return;
       }
       const data = await res.json();
-      setForm({ ...(data.user as Partial<User>), is_public: data.user.is_public ? "1" : "0" });
+      setForm({ ...data.user, is_public: data.user.is_public ? "1" : "0" } as unknown as Partial<User>);
       setAvatarUrl(data.user.avatar);
       setLifePhotoUrls(data.user.life_photos || []);
       setPrivacy({
