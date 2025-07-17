@@ -1,8 +1,7 @@
 "use client";
 import { Box, Button, Typography, Stack, Container, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
-import { VolcanoIcon } from "@/components/NavBar";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import { useUser } from "@/context/UserContext";
 

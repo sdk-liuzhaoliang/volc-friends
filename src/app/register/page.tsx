@@ -40,7 +40,6 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMsg, setDialogMsg] = useState("");
   const [agree, setAgree] = useState(false);
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [captchaUrl, setCaptchaUrl] = useState("");
@@ -404,13 +403,6 @@ export default function RegisterPage() {
         <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={loading}>{loading ? '注册中...' : '注册'}</Button>
       </form>
       {/* 这里不再显示忘记密码和修改密码入口 */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>提示</DialogTitle>
-        <DialogContent>{dialogMsg}</DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>关闭</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 } 

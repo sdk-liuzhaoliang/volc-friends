@@ -108,12 +108,7 @@ export default function ProfilePage() {
     setLifePhotoUrls(newUrls);
   };
 
-  const handlePrivacyChange = (field: string, value: string) => {
-    setPrivacy({ ...privacy, [field]: value });
-    if (value === 'private') {
-      setForm({ ...form, [field]: '' });
-    }
-  };
+  // 移除未使用的函数
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
@@ -217,9 +212,11 @@ export default function ProfilePage() {
         if (newPhotoCount > 0) {
           // 只上传新添加的照片
           const newPhotos = lifePhotos.slice(-newPhotoCount);
+          const newUrls = [];
           for (const file of newPhotos) {
-            lifePhotoUrlsToUse.push(await uploadFile(file));
+            newUrls.push(await uploadFile(file));
           }
+          lifePhotoUrlsToUse = [...lifePhotoUrls, ...newUrls];
         }
       }
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;

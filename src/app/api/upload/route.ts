@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-
-// 保留函数，但不强制要求 userId
-function getUserIdFromRequest(req: NextRequest): number | null {
-  const auth = req.headers.get('authorization');
-  if (!auth) return null;
-  const token = auth.replace('Bearer ', '');
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!);
-    if (typeof payload === 'object' && payload !== null && 'userId' in payload && typeof (payload as JwtPayload).userId === 'number') {
-      return (payload as JwtPayload).userId;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
 
 export async function POST(req: NextRequest) {
   // 允许未登录用户上传图片（注册流程专用）

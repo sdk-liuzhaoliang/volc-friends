@@ -31,6 +31,6 @@ export async function POST(req: NextRequest) {
   }
   // 生成 token
   const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
-  const { password: _pw, ...userSafe } = user;
+  const { password: userPassword, ...userSafe } = user;
   return NextResponse.json({ token, user: userSafe });
 } 

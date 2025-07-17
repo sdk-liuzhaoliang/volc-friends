@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Drawer, SelectChangeEvent, CircularProgress, Tooltip } from "@mui/material";
+import React, { useEffect } from "react";
+import { Box, Typography, Avatar, Card, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Drawer, SelectChangeEvent, CircularProgress, Tooltip } from "@mui/material";
 import type { User } from "@/types/user";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];

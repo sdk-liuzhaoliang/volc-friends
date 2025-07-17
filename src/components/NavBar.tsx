@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem } from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
