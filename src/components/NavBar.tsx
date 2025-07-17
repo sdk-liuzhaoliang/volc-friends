@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton } from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { useUser } from "@/context/UserContext";
 import type { User } from "@/types/user";
 
 export function VolcanoIcon({ size = 32, ...props }: { size?: number } & React.SVGProps<SVGSVGElement>) {
@@ -18,20 +19,38 @@ export function VolcanoIcon({ size = 32, ...props }: { size?: number } & React.S
 
 export default function NavBar() {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const { user, setUser, loadingUser, setLoadingUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => { setHydrated(true); }, []);
 
   useEffect(() => {
-    fetch("/api/user/profile").then(async res => {
+    if (!hydrated) return;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    fetch("/api/user/profile", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    }).then(async res => {
       if (res.status === 200) {
         const data = await res.json();
         setUser(data.user);
+      } else if (res.status === 401) {
+        if (typeof window !== 'undefined') localStorage.removeItem('token');
+        setUser(null);
       } else {
         setUser(null);
       }
+      setLoadingUser(false);
     });
-  }, [pathname]);
+  }, [pathname, hydrated]);
+
+  if (!hydrated) {
+    return (
+      <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw' }}>
+        <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }} />
+      </AppBar>
+    );
+  }
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -42,43 +61,60 @@ export default function NavBar() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setAnchorEl(null);
+    if (typeof window !== 'undefined') localStorage.removeItem('token');
     setUser(null);
     router.push("/login");
   };
 
   return (
-    <AppBar position="static" color="default" elevation={0} sx={{ mb: 2 }}>
-      <Toolbar sx={{ maxWidth: 1200, mx: "auto", width: "100%", px: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: 1 }}>
+    <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw' }}>
+      <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }}>
+        {/* 左侧logo+标题，pl:2 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '0 0 auto', pl: 2 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <VolcanoIcon size={32} style={{ marginRight: 8 }} />
-            <Typography variant="h6" color="primary" fontWeight={700} letterSpacing={1} sx={{ flexShrink: 0 }}>
+            <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9, background: '#fff' }} />
+            <Typography variant="h5" color="primary" fontWeight={800} letterSpacing={1} sx={{ flexShrink: 0, fontSize: 28 }}>
               VolcFriends
             </Typography>
           </Link>
-          <Button color="primary" component={Link} href="/square" sx={{ ml: 3, fontWeight: 500 }}>
-            交友广场
+        </Box>
+        {/* 菜单按钮区，flex:1自适应 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', flex: '1 1 0%', justifyContent: 'flex-start', ml: 3 }}>
+          <Button color="primary" component={Link} href="/" sx={{ mx: 1.5, fontWeight: 500 }}>
+            首页
           </Button>
-          <Button color="primary" component={Link} href="/about" sx={{ ml: 2, fontWeight: 500 }}>
+          <Button color="primary" component={Link} href="/square" sx={{ mx: 1.5, fontWeight: 500 }}>
+            友谊广场
+          </Button>
+          <Button color="primary" component={Link} href="/about" sx={{ mx: 1.5, fontWeight: 500 }}>
             关于我们
           </Button>
         </Box>
-        <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
-          {user ? (
-            <>
-              <IconButton onClick={handleMenu} sx={{ p: 0 }}>
-                <Avatar src={user.avatar} alt={user.nickname} sx={{ width: 36, height: 36 }} />
-              </IconButton>
-              <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-                <MenuItem onClick={() => { handleClose(); router.push("/profile"); }}>我的信息</MenuItem>
-                <MenuItem onClick={handleLogout}>退出登录</MenuItem>
-              </Menu>
-            </>
+        {/* 右侧头像/登录注册区，pr:2 */}
+        <Box sx={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', ml: 2, pr: 2, justifyContent: 'flex-end' }}>
+          {loadingUser ? (
+            <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#f3f6fa' }} />
           ) : (
-            <>
-              <Button color="primary" component={Link} href="/login" sx={{ mr: 1 }}>登录</Button>
-              <Button variant="contained" color="primary" component={Link} href="/register">注册</Button>
-            </>
+            user ? (
+              <>
+                <IconButton onClick={handleMenu} sx={{ p: 0 }}>
+                  <Avatar src={user.avatar} alt={user.nickname} sx={{ width: 36, height: 36 }} />
+                </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 1, minWidth: 0, maxWidth: 180, overflow: 'hidden' }}>
+                  <Typography noWrap fontWeight={700} fontSize={16} maxWidth={90}>{user.nickname}</Typography>
+                  <Typography noWrap color="text.secondary" fontSize={13} maxWidth={90} sx={{ ml: 1 }}>{user.username}</Typography>
+                </Box>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                  <MenuItem onClick={() => { handleClose(); router.push("/profile"); }}>我的信息</MenuItem>
+                  <MenuItem onClick={handleLogout}>退出登录</MenuItem>
+                </Menu>
+              </>
+            ) : (
+              <>
+                <Button color="primary" component={Link} href="/login" sx={{ mr: 1 }}>登录</Button>
+                <Button variant="contained" color="primary" component={Link} href="/register">注册</Button>
+              </>
+            )
           )}
         </Box>
       </Toolbar>

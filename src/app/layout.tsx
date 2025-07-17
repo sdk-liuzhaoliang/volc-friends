@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
+import { UserProvider } from "@/context/UserContext";
+import ThemeRegistry from '@/components/ThemeRegistry';
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -11,9 +13,17 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
-        <NavBar />
-        {children}
+      <body style={{ background: '#f7f9fb', minHeight: '100vh' }}>
+        <ThemeRegistry>
+          <UserProvider>
+            <div>
+              <NavBar />
+              <main style={{ padding: '64px 0 24px 0' }}>
+                {children}
+              </main>
+            </div>
+          </UserProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );
