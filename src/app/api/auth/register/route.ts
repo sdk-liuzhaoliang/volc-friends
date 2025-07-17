@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
   }
   const hash = await bcrypt.hash(password, 10);
   // 处理可选字段
-  const safeInt = (v: any) => v === "" ? null : Number(v);
-  const safeStr = (v: any) => v === "" ? null : v;
-  const safePublic = (v: any) => v === true || v === "1" ? "1" : "0";
+  const safeInt = (v: string | number | null | undefined) => v === "" ? null : Number(v);
+  const safeStr = (v: string | null | undefined) => v === "" ? null : v;
+  const safePublic = (v: boolean | string | null | undefined) => v === true || v === "1" ? "1" : "0";
   await pool.query(
     'INSERT INTO users (username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
     [
