@@ -21,7 +21,7 @@ export default function HomePage() {
     return (
       <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
         <Box display="flex" alignItems="center" mb={3}>
-          <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11, background: '#fff' }} />
+          <img src="/logo.png" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11, background: '#fff' }} />
           <Typography variant="h3" fontWeight={700} color="primary.main">VolcFriends</Typography>
         </Box>
         <Typography variant="h6" color="text.secondary" mb={4} align="center">
@@ -37,7 +37,7 @@ export default function HomePage() {
   return (
     <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
       <Box display="flex" alignItems="center" mb={3}>
-        <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 65, height: 65, marginRight: 18, borderRadius: 11, background: '#fff' }} />
+        <img src="/logo.png" alt="VolcFriends Logo" style={{ width: 65, height: 65, marginRight: 18, borderRadius: 11, background: '#fff' }} />
         <Typography variant="h3" fontWeight={700} color="primary.main" sx={{ fontSize: 62.5 }}>
           VolcFriends
         </Typography>
