@@ -75,7 +75,7 @@ export default function NavBar() {
         {/* 左侧logo+标题，pl:2 */}
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '0 0 auto', pl: 2 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <img src={`/logo.png?v=${Date.now()}`} alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9, background: '#fff' }} />
+            <img src="/logo.png?v=2" alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9, background: '#fff' }} />
             <Typography variant="h5" color="primary" fontWeight={800} letterSpacing={1} sx={{ flexShrink: 0, fontSize: 28 }}>
               VolcFriends
             </Typography>
