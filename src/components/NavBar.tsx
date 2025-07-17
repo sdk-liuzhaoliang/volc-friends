@@ -97,7 +97,7 @@ export default function NavBar() {
             友谊广场
           </Button>
           <Button sx={{ mx: 1.5, fontWeight: 500, color: 'white', fontSize: 16, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }} component={Link} href="/about">
-            关于我们
+            关于
           </Button>
         </Box>
         {/* 右侧头像/登录注册区，pr:2 */}
