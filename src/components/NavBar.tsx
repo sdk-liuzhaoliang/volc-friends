@@ -4,7 +4,6 @@ import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem } from
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
-import type { User } from "@/types/user";
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 
 export function VolcanoIcon({ size = 32, ...props }: { size?: number } & React.SVGProps<SVGSVGElement>) {

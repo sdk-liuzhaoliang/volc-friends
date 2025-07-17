@@ -24,7 +24,7 @@ export default function SquarePage() {
   });
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [page, setPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(12);
+  const [pageSize] = React.useState(12);
 
   const fetchUsers = async (params: Record<string, string> = {}) => {
     setLoading(true);

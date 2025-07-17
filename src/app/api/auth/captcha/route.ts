@@ -50,7 +50,7 @@ function generateSVGCaptcha(text: string) {
   `;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const captchaText = generateCaptcha();
   const svg = generateSVGCaptcha(captchaText);
   

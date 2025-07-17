@@ -143,7 +143,7 @@ export default function ProfilePage() {
         const data = await res.json();
         setError(data.error || '注销失败，请稍后重试');
       }
-    } catch (error) {
+    } catch {
       setError('网络错误，请稍后重试');
     } finally {
       setDeleting(false);

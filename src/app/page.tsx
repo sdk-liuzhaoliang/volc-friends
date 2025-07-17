@@ -8,7 +8,7 @@ import { useUser } from "@/context/UserContext";
 export default function HomePage() {
   const router = useRouter();
   const [protocolOpen, setProtocolOpen] = useState(false);
-  const { user, setUser, loadingUser, setLoadingUser } = useUser();
+  const { user, setUser, loadingUser } = useUser();
   // 去除 hydrated
 
   const handleLogout = async () => {

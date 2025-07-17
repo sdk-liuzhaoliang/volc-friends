@@ -39,7 +39,6 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [agree, setAgree] = useState(false);
   const [protocolOpen, setProtocolOpen] = useState(false);
   const [captchaUrl, setCaptchaUrl] = useState("");
