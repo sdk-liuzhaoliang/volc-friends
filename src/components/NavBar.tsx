@@ -44,12 +44,19 @@ export default function NavBar() {
     });
   }, [pathname, hydrated]);
 
-  if (typeof window === 'undefined' || loadingUser) {
+  if (!hydrated || loadingUser) {
     return (
-      <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw' }}>
+      <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#1976d2', boxShadow: 'none', width: '100vw' }}>
         <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }}>
+          {/* 左侧logo+标题，pl:2 */}
+          <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '0 0 auto', pl: 2 }}>
+            <img src="/icon.png" alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9 }} />
+            <Typography variant="h5" color="white" fontWeight={800} letterSpacing={1} sx={{ flexShrink: 0, fontSize: 28 }}>
+              VolcFriends
+            </Typography>
+          </Box>
           <Box sx={{ flex: '1 1 0%' }} />
-          <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#f3f6fa' }} />
+          <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.2)', mr: 2 }} />
         </Toolbar>
       </AppBar>
     );
@@ -70,26 +77,26 @@ export default function NavBar() {
   };
 
   return (
-    <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw', borderBottom: '1px solid #e5eaf2' }}>
+    <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#1976d2', boxShadow: 'none', width: '100vw' }}>
       <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }}>
         {/* 左侧logo+标题，pl:2 */}
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '0 0 auto', pl: 2 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-            <img src="/logo.png" alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9, background: '#fff' }} />
-            <Typography variant="h5" color="primary" fontWeight={800} letterSpacing={1} sx={{ flexShrink: 0, fontSize: 28 }}>
+            <img src="/icon.png" alt="VolcFriends Logo" style={{ width: 39, height: 39, marginRight: 11, borderRadius: 9 }} />
+            <Typography variant="h5" color="white" fontWeight={800} letterSpacing={1} sx={{ flexShrink: 0, fontSize: 28 }}>
               VolcFriends
             </Typography>
           </Link>
         </Box>
         {/* 菜单按钮区，flex:1自适应 */}
         <Box sx={{ display: 'flex', alignItems: 'center', flex: '1 1 0%', justifyContent: 'flex-start', ml: 3 }}>
-          <Button color="primary" component={Link} href="/" sx={{ mx: 1.5, fontWeight: 500 }}>
+          <Button sx={{ mx: 1.5, fontWeight: 500, color: 'white', fontSize: 16, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }} component={Link} href="/">
             首页
           </Button>
-          <Button color="primary" component={Link} href="/square" sx={{ mx: 1.5, fontWeight: 500 }}>
+          <Button sx={{ mx: 1.5, fontWeight: 500, color: 'white', fontSize: 16, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }} component={Link} href="/square">
             友谊广场
           </Button>
-          <Button color="primary" component={Link} href="/about" sx={{ mx: 1.5, fontWeight: 500 }}>
+          <Button sx={{ mx: 1.5, fontWeight: 500, color: 'white', fontSize: 16, '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' } }} component={Link} href="/about">
             关于我们
           </Button>
         </Box>
@@ -105,12 +112,12 @@ export default function NavBar() {
                   sx={{
                     display: 'flex', alignItems: 'center', cursor: 'pointer',
                     px: 1, py: 0.5, borderRadius: 2,
-                    '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                    '&:hover': { bgcolor: 'rgba(255,255,255,0.1)' }
                   }}
                 >
                   <Avatar src={user.avatar} alt={user.nickname} sx={{ width: 36, height: 36 }} />
-                  <Typography noWrap fontWeight={700} fontSize={16} maxWidth={90} sx={{ ml: 1 }}>{user.nickname}</Typography>
-                  <KeyboardArrowDown sx={{ ml: 0.5, fontSize: 22, color: 'text.secondary' }} />
+                  <Typography noWrap fontWeight={700} fontSize={16} maxWidth={90} sx={{ ml: 1, color: 'white' }}>{user.nickname}</Typography>
+                  <KeyboardArrowDown sx={{ ml: 0.5, fontSize: 22, color: 'white' }} />
                 </Box>
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                   <MenuItem onClick={() => { handleClose(); router.push("/profile"); }}>我的信息</MenuItem>
@@ -119,8 +126,8 @@ export default function NavBar() {
               </>
             ) : (
               <>
-                <Button color="primary" component={Link} href="/login" sx={{ mr: 1 }}>登录</Button>
-                <Button variant="contained" color="primary" component={Link} href="/register">注册</Button>
+                <Button variant="outlined" sx={{ mr: 1, color: 'white', borderColor: 'white', '&:hover': { bgcolor: 'rgba(255,255,255,0.1)', borderColor: 'white' } }} component={Link} href="/login">登录</Button>
+                <Button variant="contained" sx={{ bgcolor: 'white', color: '#1976d2', fontWeight: 600, '&:hover': { bgcolor: '#f5f5f5' } }} component={Link} href="/register">注册</Button>
               </>
             )
           )}

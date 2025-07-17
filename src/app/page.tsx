@@ -1,7 +1,7 @@
 "use client";
 import { Box, Button, Typography, Stack, Container, Dialog, DialogTitle, DialogContent, DialogActions } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Avatar from "@mui/material/Avatar";
 import { useUser } from "@/context/UserContext";
 
@@ -9,19 +9,23 @@ export default function HomePage() {
   const router = useRouter();
   const [protocolOpen, setProtocolOpen] = useState(false);
   const { user, setUser, loadingUser } = useUser();
-  // 去除 hydrated
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     if (typeof window !== 'undefined') localStorage.removeItem('token');
     setUser(null);
   };
-  // 不要 if (loadingUser) return null;
-  if (typeof window === 'undefined' || loadingUser) {
+  
+  if (!hydrated || loadingUser) {
     return (
       <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
         <Box display="flex" alignItems="center" mb={3}>
-          <img src="/logo.png" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11, background: '#fff' }} />
+          <img src="/icon.png" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11 }} />
           <Typography variant="h3" fontWeight={700} color="primary.main">VolcFriends</Typography>
         </Box>
         <Typography variant="h6" color="text.secondary" mb={4} align="center">
@@ -37,7 +41,7 @@ export default function HomePage() {
   return (
     <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
       <Box display="flex" alignItems="center" mb={3}>
-        <img src="/logo.png" alt="VolcFriends Logo" style={{ width: 65, height: 65, marginRight: 18, borderRadius: 11, background: '#fff' }} />
+        <img src="/icon.png" alt="VolcFriends Logo" style={{ width: 65, height: 65, marginRight: 18, borderRadius: 11 }} />
         <Typography variant="h3" fontWeight={700} color="primary.main" sx={{ fontSize: 62.5 }}>
           VolcFriends
         </Typography>

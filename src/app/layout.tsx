@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{ background: '#f7f9fb', minHeight: '100vh' }}>
+      <body style={{ background: '#ffffff', minHeight: '100vh' }}>
         <ThemeRegistry>
           <UserProvider>
             <div>
