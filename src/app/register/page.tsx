@@ -240,7 +240,7 @@ export default function RegisterPage() {
       <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" textAlign="center">
         <CircularProgress color="success" sx={{ mb: 2 }} />
         <Typography variant="h6" mb={2}>注册成功</Typography>
-        <Typography color="text.secondary">即将自动登录...</Typography>
+        <Typography color="text.secondary">即将前往登录页...</Typography>
       </Box>
     );
   }
