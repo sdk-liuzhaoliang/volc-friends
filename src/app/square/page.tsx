@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Drawer } from "@mui/material";
+import { Box, Typography, Grid, Avatar, Card, CardContent, CardMedia, TextField, MenuItem, Button, FormControl, InputLabel, Select, Drawer, SelectChangeEvent } from "@mui/material";
 import type { User } from "@/types/user";
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
@@ -41,19 +41,21 @@ export default function SquarePage() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
   };
-  const handleSelectChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-    const name = e.target.name as string;
-    setFilters({ ...filters, [name]: e.target.value });
+  const handleGenderChange = (e: SelectChangeEvent<string>) => {
+    setFilters({ ...filters, gender: e.target.value });
+  };
+  const handleEducationChange = (e: SelectChangeEvent<string>) => {
+    setFilters({ ...filters, education: e.target.value });
   };
 
   const handleSearch = () => {
     fetchUsers(filters);
   };
 
-  const displayValue = (val: unknown, privacy: string | undefined) => {
+  const displayValue = (val: unknown, privacy: string | undefined): string => {
     if (privacy === 'private') return '***';
     if (val === undefined || val === null || val === '') return '***';
-    return val;
+    return String(val);
   };
 
   return (
@@ -62,7 +64,7 @@ export default function SquarePage() {
       <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>性别</InputLabel>
-          <Select name="gender" value={filters.gender} label="性别" onChange={handleSelectChange}>
+          <Select name="gender" value={filters.gender} label="性别" onChange={handleGenderChange}>
             {genderOptions.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
           </Select>
         </FormControl>
@@ -72,7 +74,7 @@ export default function SquarePage() {
         <TextField label="最大身高" name="maxHeight" value={filters.maxHeight} onChange={handleInputChange} type="number" sx={{ width: 100 }} />
         <FormControl sx={{ minWidth: 120 }}>
           <InputLabel>学历</InputLabel>
-          <Select name="education" value={filters.education} label="学历" onChange={handleSelectChange}>
+          <Select name="education" value={filters.education} label="学历" onChange={handleEducationChange}>
             <MenuItem value="">全部</MenuItem>
             {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </Select>
@@ -81,7 +83,7 @@ export default function SquarePage() {
       </Box>
       <Grid container spacing={3}>
         {loading ? <Typography>加载中...</Typography> : users.length === 0 ? <Typography>暂无符合条件的用户</Typography> : users.map(user => (
-          <Grid item xs={12} sm={6} md={4} key={user.id}>
+          <Box key={user.id} sx={{ width: '100%', maxWidth: 400, flex: '1 1 33%', mb: 2 }}>
             <Card sx={{ mb: 2, cursor: 'pointer' }} onClick={() => setSelectedUser(user)}>
               <Box display="flex" alignItems="center" p={2}>
                 <Avatar src={user.avatar} sx={{ width: 56, height: 56, mr: 2 }} />
@@ -105,7 +107,7 @@ export default function SquarePage() {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
         ))}
       </Grid>
       <Drawer anchor="right" open={!!selectedUser} onClose={() => setSelectedUser(null)} sx={{ zIndex: 1301 }} PaperProps={{ sx: { width: 360, maxWidth: '90vw' } }}>
