@@ -85,7 +85,7 @@ export default function SquarePage() {
         <Button variant="contained" onClick={handleSearch} sx={{ height: 42, minWidth: 120, fontWeight: 600, fontSize: 16, ml: 'auto' }}>筛选</Button>
       </Box>
       {/* 分页控件美化 */}
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mt={3} mb={2} gap={2}>
+      <Box display="flex" justifyContent="flex-end" alignItems="center" mt={3} mb={3} gap={2}>
         <Typography
           variant="body2"
           color={page === 1 ? 'text.disabled' : 'primary'}

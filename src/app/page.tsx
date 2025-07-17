@@ -18,15 +18,33 @@ export default function HomePage() {
     setUser(null);
   };
   // 不要 if (loadingUser) return null;
+  if (typeof window === 'undefined' || loadingUser) {
+    return (
+      <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
+        <Box display="flex" alignItems="center" mb={3}>
+          <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11, background: '#fff' }} />
+          <Typography variant="h3" fontWeight={700} color="primary.main">VolcFriends</Typography>
+        </Box>
+        <Typography variant="h6" color="text.secondary" mb={4} align="center">
+          让心动如火山般悄然涌现，<br />
+          在这里与温暖和热烈相逢。
+        </Typography>
+        <Stack spacing={2} width="100%">
+          <Box height={120} />
+        </Stack>
+      </Container>
+    );
+  }
   return (
     <Container maxWidth="sm" sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', pb: 8 }}>
       <Box display="flex" alignItems="center" mb={3}>
-        <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 52, height: 52, marginRight: 14, borderRadius: 11, background: '#fff' }} />
-        <Typography variant="h3" fontWeight={700} color="primary.main">VolcFriends</Typography>
+        <img src="/logo.jpeg" alt="VolcFriends Logo" style={{ width: 65, height: 65, marginRight: 18, borderRadius: 11, background: '#fff' }} />
+        <Typography variant="h3" fontWeight={700} color="primary.main" sx={{ fontSize: 62.5 }}>
+          VolcFriends
+        </Typography>
       </Box>
       <Typography variant="h6" color="text.secondary" mb={4} align="center">
-        让心动如火山般悄然涌现，<br />
-        在这里与温暖和热烈相逢。
+        让心动如火山般涌现，在这里与温暖和热烈相逢。
       </Typography>
       <Stack spacing={2} width="100%">
         <Button variant="contained" size="large" onClick={() => router.push('/square')}>进入友谊广场</Button>

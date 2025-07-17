@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import type { User } from "@/types/user";
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 
 export function VolcanoIcon({ size = 32, ...props }: { size?: number } & React.SVGProps<SVGSVGElement>) {
   return (
@@ -44,10 +45,13 @@ export default function NavBar() {
     });
   }, [pathname, hydrated]);
 
-  if (!hydrated) {
+  if (typeof window === 'undefined' || loadingUser) {
     return (
       <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw' }}>
-        <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }} />
+        <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }}>
+          <Box sx={{ flex: '1 1 0%' }} />
+          <Box sx={{ width: 36, height: 36, borderRadius: '50%', bgcolor: '#f3f6fa' }} />
+        </Toolbar>
       </AppBar>
     );
   }
@@ -67,7 +71,7 @@ export default function NavBar() {
   };
 
   return (
-    <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw' }}>
+    <AppBar position="fixed" color="default" elevation={0} sx={{ mb: 2, bgcolor: '#fff', boxShadow: 'none', width: '100vw', borderBottom: '1px solid #e5eaf2' }}>
       <Toolbar sx={{ width: '100%', px: 0, minHeight: 64 }}>
         {/* 左侧logo+标题，pl:2 */}
         <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0, flex: '0 0 auto', pl: 2 }}>
@@ -97,12 +101,17 @@ export default function NavBar() {
           ) : (
             user ? (
               <>
-                <IconButton onClick={handleMenu} sx={{ p: 0 }}>
+                <Box
+                  onClick={handleMenu}
+                  sx={{
+                    display: 'flex', alignItems: 'center', cursor: 'pointer',
+                    px: 1, py: 0.5, borderRadius: 2,
+                    '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
+                  }}
+                >
                   <Avatar src={user.avatar} alt={user.nickname} sx={{ width: 36, height: 36 }} />
-                </IconButton>
-                <Box sx={{ display: 'flex', alignItems: 'center', ml: 1, minWidth: 0, maxWidth: 180, overflow: 'hidden' }}>
-                  <Typography noWrap fontWeight={700} fontSize={16} maxWidth={90}>{user.nickname}</Typography>
-                  <Typography noWrap color="text.secondary" fontSize={13} maxWidth={90} sx={{ ml: 1 }}>{user.username}</Typography>
+                  <Typography noWrap fontWeight={700} fontSize={16} maxWidth={90} sx={{ ml: 1 }}>{user.nickname}</Typography>
+                  <KeyboardArrowDown sx={{ ml: 0.5, fontSize: 22, color: 'text.secondary' }} />
                 </Box>
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
                   <MenuItem onClick={() => { handleClose(); router.push("/profile"); }}>我的信息</MenuItem>

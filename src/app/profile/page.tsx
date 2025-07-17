@@ -5,8 +5,11 @@ import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import { useRouter } from "next/navigation";
 import type { User } from "@/types/user";
 import type { SelectChangeEvent } from "@mui/material/Select";
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
 
-const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
+const educationOptions = ["幼儿园", "小学", "初中", "高中", "大专", "本科", "硕士", "博士"];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -22,6 +25,8 @@ export default function ProfilePage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [formBackup, setFormBackup] = useState<typeof form | null>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -191,11 +196,7 @@ export default function ProfilePage() {
       const data = await res.json();
       if (data.success) {
         setError("");
-        setSuccessMsg("保存成功");
-        setTimeout(() => {
-          setSuccessMsg("");
-          window.location.reload();
-        }, 2000);
+        setEditMode(false);
       } else {
         setError(data.error || '保存失败');
       }
@@ -213,28 +214,119 @@ export default function ProfilePage() {
   // XSS 转义函数
   const escapeHTML = (str: string) => str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c]||c));
 
-  if (loading || !form) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh"><CircularProgress /></Box>;
+  if (typeof window === 'undefined' || loading) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh"><CircularProgress /></Box>;
 
+  // 只读态渲染
+  if (!editMode) {
+    return (
+      <Box maxWidth={720} mx="auto" mt={4}>
+        <Box p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" mb={3}>
+          {successMsg && <Box mb={2}><Typography color="success.main" fontWeight={600} textAlign="center">{successMsg}</Typography></Box>}
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+            <Typography variant="h5" fontWeight={700} align="left">我的信息</Typography>
+            <IconButton onClick={() => { setEditMode(true); setFormBackup(form); }} color="primary"><EditIcon /></IconButton>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>用户名：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.username}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>联系邮箱：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.email}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>昵称：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.nickname}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>性别：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.gender === 'male' ? '男' : form!.gender === 'female' ? '女' : '其他'}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>年龄：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.age ?? '未填写'}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>身高：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.height ? `${form!.height}cm` : '未填写'}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>学历：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.education || '未填写'}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>个人描述：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block', whiteSpace: 'pre-line' }}>{form!.description}</Typography>
+          </Box>
+          <Box mb={2}>
+            <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>是否公开到友谊广场：</Typography>
+            <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.is_public === '1' ? '公开' : '隐藏'}</Typography>
+          </Box>
+          <Box mt={2} mb={1}>
+            <Typography>头像</Typography>
+            <Avatar src={avatarUrl} sx={{ width: 56, height: 56, ml: 2 }} />
+          </Box>
+          <Box mt={2} mb={1}>
+            <Typography>生活照片（最多3张，选填）</Typography>
+            <Grid container spacing={1} mt={1}>
+              {lifePhotoUrls.length === 0 ? (
+                <Typography variant="body2" color="text.disabled" sx={{ ml: 1 }}>该用户暂未上传照片</Typography>
+              ) : lifePhotoUrls.map((url, idx) => (
+                <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1, position: 'relative' }}>
+                  <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+                </Box>
+              ))}
+            </Grid>
+          </Box>
+        </Box>
+        {/* 账号管理卡片和其它内容保持不变 */}
+        <Box p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" mt={3}>
+          <Typography variant="h6" fontWeight={700} align="left" mb={2}>账号管理</Typography>
+          <Button variant="outlined" color="primary" onClick={() => setPwdDialogOpen(true)} fullWidth sx={{ mb: 2 }}>修改密码</Button>
+          <Button variant="outlined" color="error" onClick={() => setDialogOpen(true)} fullWidth>账号注销</Button>
+        </Box>
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
+          <DialogTitle>提示</DialogTitle>
+          <DialogContent>AI正在忙其他事情，还没有开发注销功能，如果要删除账号请联系网站所有者。</DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogOpen(false)}>关闭</Button>
+          </DialogActions>
+        </Dialog>
+        <Dialog open={pwdDialogOpen} onClose={() => setPwdDialogOpen(false)}>
+          <DialogTitle>提示</DialogTitle>
+          <DialogContent>AI正在忙其他事情，密码修改功能还没有开发。</DialogContent>
+          <DialogActions>
+            <Button onClick={() => setPwdDialogOpen(false)}>关闭</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    );
+  }
+
+  // 编辑态渲染（原表单）
   return (
-    <Box maxWidth={600} mx="auto" mt={4}>
-      {/* 我的信息卡片 */}
+    <Box maxWidth={720} mx="auto" mt={4}>
       <Box p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" mb={3}>
         {successMsg && <Box mb={2}><Typography color="success.main" fontWeight={600} textAlign="center">{successMsg}</Typography></Box>}
         <Typography variant="h5" fontWeight={700} align="left" mb={2}>我的信息</Typography>
+        <Box mb={2}>
+          <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>用户名：</Typography>
+          <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.username}</Typography>
+        </Box>
         <form onSubmit={handleSave}>
-          <TextField label="联系邮箱" name="email" value={escapeHTML(form.email ?? "")}
+          <TextField label="联系邮箱" name="email" value={escapeHTML(form!.email ?? "")}
             onChange={handleInputChange} fullWidth margin="normal" required inputProps={{ maxLength: 128 }} />
-          <TextField label="昵称" name="nickname" value={escapeHTML(form.nickname ?? "")} onChange={handleInputChange} fullWidth margin="normal" required />
+          <TextField label="昵称" name="nickname" value={escapeHTML(form!.nickname ?? "")} onChange={handleInputChange} fullWidth margin="normal" required />
           <FormControl fullWidth margin="normal">
             <InputLabel>性别</InputLabel>
-            <Select name="gender" value={form.gender} label="性别" onChange={handleSelectChange} required>
+            <Select name="gender" value={form!.gender} label="性别" onChange={handleSelectChange} required>
               <MenuItem value="male">男</MenuItem>
               <MenuItem value="female">女</MenuItem>
               <MenuItem value="other">其他</MenuItem>
             </Select>
           </FormControl>
           <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="年龄" name="age" value={form.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 10, max: 150 }} />
+            <TextField label="年龄" name="age" value={form!.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 10, max: 150 }} />
             <FormControl component="fieldset" sx={{ mt: 2 }}>
               <RadioGroup row value={privacy.age} onChange={handleRadioChange('age')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
@@ -243,7 +335,7 @@ export default function ProfilePage() {
             </FormControl>
           </Box>
           <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="身高(cm)" name="height" value={form.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
+            <TextField label="身高(cm)" name="height" value={form!.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
             <FormControl component="fieldset" sx={{ mt: 2 }}>
               <RadioGroup row value={privacy.height} onChange={handleRadioChange('height')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
@@ -254,7 +346,7 @@ export default function ProfilePage() {
           <Box display="flex" alignItems="center" gap={2}>
             <FormControl fullWidth margin="normal">
               <InputLabel>学历</InputLabel>
-              <Select name="education" value={form.education} label="学历" onChange={handleSelectChange}>
+              <Select name="education" value={form!.education} label="学历" onChange={handleSelectChange}>
                 {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
               </Select>
             </FormControl>
@@ -265,10 +357,10 @@ export default function ProfilePage() {
               </RadioGroup>
             </FormControl>
           </Box>
-          <TextField label="个人描述" name="description" value={escapeHTML(form.description ?? "")} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
+          <TextField label="个人描述" name="description" value={escapeHTML(form!.description ?? "")} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
           <FormControl fullWidth margin="normal">
-            <InputLabel>是否公开</InputLabel>
-            <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleSelectChange} required>
+            <InputLabel>是否公开到友谊广场</InputLabel>
+            <Select name="is_public" value={form!.is_public} label="是否公开到友谊广场" onChange={handleSelectChange} required>
               <MenuItem value="1">公开</MenuItem>
               <MenuItem value="0">隐藏</MenuItem>
             </Select>
@@ -303,7 +395,10 @@ export default function ProfilePage() {
             </Grid>
           </Box>
           {error && <Typography color="error" mt={1}>{error}</Typography>}
-          <Button type="submit" variant="contained" color="primary" fullWidth sx={{ mt: 2 }} disabled={saving}>{saving ? '保存中...' : '保存修改'}</Button>
+          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={2} mb={2}>
+            <Button type="submit" variant="contained" color="primary" sx={{ minWidth: 120 }} startIcon={<SaveIcon />} disabled={saving}>{saving ? '保存中...' : '保存修改'}</Button>
+            <Button type="button" variant="outlined" color="primary" sx={{ minWidth: 120 }} startIcon={<CloseIcon />} onClick={() => { setEditMode(false); setForm(formBackup!); setError(""); }} disabled={saving}>取消</Button>
+          </Box>
         </form>
       </Box>
       {/* 账号管理卡片 */}
