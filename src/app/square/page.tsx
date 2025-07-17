@@ -28,17 +28,33 @@ export default function SquarePage() {
 
   const fetchUsers = async (params: Record<string, string> = {}) => {
     setLoading(true);
-    const query = new URLSearchParams({ ...params, page: String(page), size: String(pageSize) }).toString();
-    const res = await fetch(`/api/square${query ? '?' + query : ''}`);
-    const data = await res.json();
-    setUsers(data.users || []);
-    setLoading(false);
+    try {
+      const query = new URLSearchParams({ ...params, page: String(page), size: String(pageSize) }).toString();
+      const res = await fetch(`/api/square${query ? '?' + query : ''}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      setUsers(data.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // 初始加载
   useEffect(() => {
     fetchUsers(filters);
-    // eslint-disable-next-line
   }, []);
+
+  // 分页变化时重新加载
+  useEffect(() => {
+    if (page > 1 || pageSize !== 12) {
+      fetchUsers(filters);
+    }
+  }, [page, pageSize]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFilters({ ...filters, [e.target.name]: e.target.value });
@@ -70,10 +86,10 @@ export default function SquarePage() {
             {genderOptions.map(opt => <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>)}
           </Select>
         </FormControl>
-        <TextField label="最小年龄" name="minAge" value={filters.minAge ?? ""} onChange={handleInputChange} type="number" sx={{ width: 100, height: 40 }} size="small" inputProps={{ min: 10, max: 150 }} />
-        <TextField label="最大年龄" name="maxAge" value={filters.maxAge ?? ""} onChange={handleInputChange} type="number" sx={{ width: 100, height: 40 }} size="small" inputProps={{ min: 10, max: 150 }} />
-        <TextField label="最小身高" name="minHeight" value={filters.minHeight ?? ""} onChange={handleInputChange} type="number" sx={{ width: 100, height: 40 }} size="small" inputProps={{ min: 100, max: 250 }} />
-        <TextField label="最大身高" name="maxHeight" value={filters.maxHeight ?? ""} onChange={handleInputChange} type="number" sx={{ width: 100, height: 40 }} size="small" inputProps={{ min: 100, max: 250 }} />
+        <TextField label="最小年龄" name="minAge" value={filters.minAge ?? ""} onChange={handleInputChange} sx={{ width: 100, height: 40 }} size="small" />
+        <TextField label="最大年龄" name="maxAge" value={filters.maxAge ?? ""} onChange={handleInputChange} sx={{ width: 100, height: 40 }} size="small" />
+        <TextField label="最小身高" name="minHeight" value={filters.minHeight ?? ""} onChange={handleInputChange} sx={{ width: 100, height: 40 }} size="small" />
+        <TextField label="最大身高" name="maxHeight" value={filters.maxHeight ?? ""} onChange={handleInputChange} sx={{ width: 100, height: 40 }} size="small" />
         <FormControl sx={{ minWidth: 120, height: 40 }} size="small">
           <InputLabel>学历</InputLabel>
           <Select name="education" value={filters.education} label="学历" onChange={handleEducationChange} size="small">
@@ -169,10 +185,10 @@ export default function SquarePage() {
                   {user.life_photos && user.life_photos.length > 0 ? (
                     <Box display="flex" gap={1.5} mt={1}>
                       {user.life_photos.slice(0, 3).map((url: string, idx: number) => (
-                        <CardMedia key={idx} component="img" image={url} alt="生活照片" sx={{ width: 56, height: 56, borderRadius: 2, objectFit: 'cover' }} />
+                        <CardMedia key={idx} component="img" image={url} alt="生活照片" sx={{ width: 56, height: 56, objectFit: 'cover' }} />
                       ))}
                       {user.life_photos.length > 3 && (
-                        <Box display="flex" alignItems="center" justifyContent="center" sx={{ width: 56, height: 56, borderRadius: 2, bgcolor: '#f0f0f0', color: 'text.secondary', fontSize: 18 }}>
+                        <Box display="flex" alignItems="center" justifyContent="center" sx={{ width: 56, height: 56, bgcolor: '#f0f0f0', color: 'text.secondary', fontSize: 18 }}>
                           +{user.life_photos.length - 3}
                         </Box>
                       )}
@@ -228,7 +244,7 @@ export default function SquarePage() {
               {selectedUser.life_photos && selectedUser.life_photos.length > 0 ? (
                 <Box display="flex" gap={1.5} flexWrap="wrap" alignItems="center" mt={1}>
                   {selectedUser.life_photos.map((url: string, idx: number) => (
-                    <CardMedia key={idx} component="img" image={url} alt="生活照片" sx={{ width: 100, height: 100, borderRadius: 2 }} />
+                    <CardMedia key={idx} component="img" image={url} alt="生活照片" sx={{ width: 200, height: 200 }} />
                   ))}
                 </Box>
               ) : (

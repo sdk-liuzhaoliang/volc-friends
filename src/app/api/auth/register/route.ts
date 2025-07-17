@@ -3,7 +3,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
-  const { username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public } = await req.json();
+  const { username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public, email, captcha, captchaId } = await req.json();
+  
+  // 验证码校验
+  if (!captcha || !captchaId) {
+    return NextResponse.json({ error: '请输入验证码' }, { status: 400 });
+  }
+  
+  // 验证验证码
+  const captchaRes = await fetch(`${req.nextUrl.origin}/api/auth/captcha`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ captchaId, captchaText: captcha })
+  });
+  
+  const captchaData = await captchaRes.json();
+  if (!captchaData.valid) {
+    return NextResponse.json({ error: captchaData.error || '验证码错误' }, { status: 400 });
+  }
+  
   const { rows: existRows } = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
   if (existRows.length > 0) {
     return NextResponse.json({ error: '用户名已存在' }, { status: 400 });
@@ -52,7 +70,7 @@ export async function POST(req: NextRequest) {
   // is_public 类型安全转换
   const safePublic = (v: boolean | string | null | undefined) => v === true || v === "1" ? "1" : "0";
   await pool.query(
-    'INSERT INTO users (username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+    'INSERT INTO users (username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public, email) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
     [
       username,
       hash,
@@ -64,7 +82,8 @@ export async function POST(req: NextRequest) {
       avatar,
       JSON.stringify(life_photos),
       description,
-      safePublic(is_public)
+      safePublic(is_public),
+      safeStr(email)
     ]
   );
   return NextResponse.json({ success: true });

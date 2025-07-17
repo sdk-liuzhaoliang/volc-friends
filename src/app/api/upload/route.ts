@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
+// 保留函数，但不强制要求 userId
 function getUserIdFromRequest(req: NextRequest): number | null {
   const auth = req.headers.get('authorization');
   if (!auth) return null;
@@ -18,8 +19,9 @@ function getUserIdFromRequest(req: NextRequest): number | null {
 }
 
 export async function POST(req: NextRequest) {
-  const userId = getUserIdFromRequest(req);
-  if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
+  // 允许未登录用户上传图片（注册流程专用）
+  // const userId = getUserIdFromRequest(req);
+  // if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
   const formData = await req.formData();
   const file = formData.get('file');
   if (!(file instanceof File)) {

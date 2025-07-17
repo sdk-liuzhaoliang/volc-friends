@@ -85,8 +85,8 @@ export default function LoginPage() {
     <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff">
       <Typography variant="h5" mb={2}>登录</Typography>
       <form onSubmit={handleSubmit}>
-        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleChange} fullWidth margin="normal" required inputProps={{ maxLength: 32 }} />
-        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"} inputProps={{ maxLength: 64 }}
+        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleChange} fullWidth margin="normal" required />
+        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"}
           InputProps={{
             endAdornment: (
               <IconButton onClick={() => setShowPassword(v => !v)} edge="end" tabIndex={-1}>

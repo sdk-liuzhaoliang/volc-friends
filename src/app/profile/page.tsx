@@ -8,16 +8,19 @@ import type { SelectChangeEvent } from "@mui/material/Select";
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import { useUser } from "@/context/UserContext";
 
 const educationOptions = ["幼儿园", "小学", "初中", "高中", "大专", "本科", "硕士", "博士"];
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { setUser } = useUser();
   const [form, setForm] = useState<(Partial<User> & { is_public?: string }) | null>(null);
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [lifePhotos, setLifePhotos] = useState<File[]>([]);
   const [lifePhotoUrls, setLifePhotoUrls] = useState<string[]>([]);
+  const [originalLifePhotoUrls, setOriginalLifePhotoUrls] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -27,6 +30,7 @@ export default function ProfilePage() {
   const [pwdDialogOpen, setPwdDialogOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [formBackup, setFormBackup] = useState<typeof form | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -48,7 +52,9 @@ export default function ProfilePage() {
             : "0",
       } as Partial<User>);
       setAvatarUrl(data.user.avatar);
-      setLifePhotoUrls(data.user.life_photos || []);
+      const photos = data.user.life_photos || [];
+      setLifePhotoUrls(photos);
+      setOriginalLifePhotoUrls(photos);
       setPrivacy({
         age: data.user.age_privacy || 'public',
         height: data.user.height_privacy || 'public',
@@ -65,7 +71,8 @@ export default function ProfilePage() {
     const name = e.target.name as string;
     setForm({ ...form, [name]: e.target.value } as (Partial<User> & { is_public?: string }));
   };
-  const handleRadioChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>, value: string) => {
+  const handleRadioChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setPrivacy({ ...privacy, [field]: value });
     if (value === 'private') {
       setForm({ ...form, [field]: '' } as Partial<User>);
@@ -82,22 +89,69 @@ export default function ProfilePage() {
 
   const handleLifePhotosChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    // 追加新照片到已有照片
+    // 追加新照片到已有照片，但不超过3张
     const newFiles = [...lifePhotos, ...files].slice(0, 3);
     setLifePhotos(newFiles);
-    setLifePhotoUrls(newFiles.map(f => URL.createObjectURL(f)));
+    
+    // 生成预览URL：保留原有照片的URL + 新照片的预览URL
+    const existingUrls = lifePhotoUrls.slice(0, lifePhotoUrls.length);
+    const newPreviewUrls = newFiles.slice(lifePhotos.length).map(f => URL.createObjectURL(f));
+    setLifePhotoUrls([...existingUrls, ...newPreviewUrls]);
   };
   // 删除生活照片
   const handleDeleteLifePhoto = (idx: number) => {
+    // 删除对应索引的文件和URL
     const newFiles = lifePhotos.filter((_, i) => i !== idx);
     setLifePhotos(newFiles);
-    setLifePhotoUrls(newFiles.map(f => URL.createObjectURL(f)));
+    
+    const newUrls = lifePhotoUrls.filter((_, i) => i !== idx);
+    setLifePhotoUrls(newUrls);
   };
 
   const handlePrivacyChange = (field: string, value: string) => {
     setPrivacy({ ...privacy, [field]: value });
     if (value === 'private') {
       setForm({ ...form, [field]: '' });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const res = await fetch('/api/auth/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      if (res.ok) {
+        // 清除本地存储
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
+        
+        // 清除用户状态
+        setUser(null);
+        
+        // 显示成功消息
+        setSuccessMsg('账号注销成功');
+        setDialogOpen(false);
+        
+        // 延迟跳转到首页
+        setTimeout(() => {
+          router.push('/');
+        }, 2000);
+      } else {
+        const data = await res.json();
+        setError(data.error || '注销失败，请稍后重试');
+      }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -156,11 +210,16 @@ export default function ProfilePage() {
       if (avatar) {
         avatarUrlToUse = await uploadFile(avatar);
       }
-      let lifePhotoUrlsToUse = lifePhotoUrls;
+      let lifePhotoUrlsToUse = [...lifePhotoUrls]; // 复制当前的照片URL
       if (lifePhotos.length > 0) {
-        lifePhotoUrlsToUse = [];
-        for (const file of lifePhotos) {
-          lifePhotoUrlsToUse.push(await uploadFile(file));
+        // 计算新添加的照片数量
+        const newPhotoCount = lifePhotos.length - originalLifePhotoUrls.length;
+        if (newPhotoCount > 0) {
+          // 只上传新添加的照片
+          const newPhotos = lifePhotos.slice(-newPhotoCount);
+          for (const file of newPhotos) {
+            lifePhotoUrlsToUse.push(await uploadFile(file));
+          }
         }
       }
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -197,6 +256,10 @@ export default function ProfilePage() {
       if (data.success) {
         setError("");
         setEditMode(false);
+        // 更新原始照片URL，以便下次编辑时正确计算新照片
+        setOriginalLifePhotoUrls(lifePhotoUrlsToUse);
+        setLifePhotoUrls(lifePhotoUrlsToUse);
+        setLifePhotos([]); // 清空新上传的照片
       } else {
         setError(data.error || '保存失败');
       }
@@ -211,8 +274,7 @@ export default function ProfilePage() {
     }
   };
 
-  // XSS 转义函数
-  const escapeHTML = (str: string) => str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c]||c));
+
 
   if (typeof window === 'undefined' || loading) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh"><CircularProgress /></Box>;
 
@@ -224,7 +286,11 @@ export default function ProfilePage() {
           {successMsg && <Box mb={2}><Typography color="success.main" fontWeight={600} textAlign="center">{successMsg}</Typography></Box>}
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
             <Typography variant="h5" fontWeight={700} align="left">我的信息</Typography>
-            <IconButton onClick={() => { setEditMode(true); setFormBackup(form); }} color="primary"><EditIcon /></IconButton>
+            <IconButton onClick={() => { 
+              setEditMode(true); 
+              setFormBackup(form); 
+              setLifePhotos([]); // 重置新上传的照片
+            }} color="primary"><EditIcon /></IconButton>
           </Box>
           <Box mb={2}>
             <Typography variant="body2" color="text.secondary" fontWeight={700} sx={{ minWidth: 64, display: 'inline-block' }}>用户名：</Typography>
@@ -270,10 +336,10 @@ export default function ProfilePage() {
             <Typography>生活照片（最多3张，选填）</Typography>
             <Grid container spacing={1} mt={1}>
               {lifePhotoUrls.length === 0 ? (
-                <Typography variant="body2" color="text.disabled" sx={{ ml: 1 }}>该用户暂未上传照片</Typography>
+                <Typography variant="body2" color="text.disabled" sx={{ ml: 1 }}>暂未上传照片</Typography>
               ) : lifePhotoUrls.map((url, idx) => (
-                <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1, position: 'relative' }}>
-                  <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+                <Box key={idx} sx={{ width: 200, height: 200, display: 'inline-block', mr: 1, position: 'relative' }}>
+                  <Box component="img" src={url} sx={{ width: 200, height: 200, objectFit: 'cover' }} />
                 </Box>
               ))}
             </Grid>
@@ -285,11 +351,34 @@ export default function ProfilePage() {
           <Button variant="outlined" color="primary" onClick={() => setPwdDialogOpen(true)} fullWidth sx={{ mb: 2 }}>修改密码</Button>
           <Button variant="outlined" color="error" onClick={() => setDialogOpen(true)} fullWidth>账号注销</Button>
         </Box>
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-          <DialogTitle>提示</DialogTitle>
-          <DialogContent>AI正在忙其他事情，还没有开发注销功能，如果要删除账号请联系网站所有者。</DialogContent>
+        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+          <DialogTitle>确认注销账号</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" color="error" sx={{ mb: 2 }}>
+              警告：此操作不可逆！
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              注销账号后，您的所有数据将被永久删除，包括：
+            </Typography>
+            <Typography variant="body2" component="ul" sx={{ pl: 2, mb: 2 }}>
+              <li>个人信息和头像</li>
+              <li>生活照片</li>
+              <li>账号登录记录</li>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              确定要注销账号吗？
+            </Typography>
+          </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>关闭</Button>
+            <Button onClick={() => setDialogOpen(false)}>取消</Button>
+            <Button 
+              variant="contained" 
+              color="error" 
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+            >
+              {deleting ? '注销中...' : '确认注销'}
+            </Button>
           </DialogActions>
         </Dialog>
         <Dialog open={pwdDialogOpen} onClose={() => setPwdDialogOpen(false)}>
@@ -314,20 +403,20 @@ export default function ProfilePage() {
           <Typography variant="body2" color="text.primary" sx={{ ml: 1, display: 'inline-block' }}>{form!.username}</Typography>
         </Box>
         <form onSubmit={handleSave}>
-          <TextField label="联系邮箱" name="email" value={escapeHTML(form!.email ?? "")}
-            onChange={handleInputChange} fullWidth margin="normal" required inputProps={{ maxLength: 128 }} />
-          <TextField label="昵称" name="nickname" value={escapeHTML(form!.nickname ?? "")} onChange={handleInputChange} fullWidth margin="normal" required />
+          <TextField label="联系邮箱" name="email" value={form!.email ?? ""}
+            onChange={handleInputChange} fullWidth margin="normal" required />
+          <TextField label="昵称" name="nickname" value={form!.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
           <FormControl fullWidth margin="normal">
             <InputLabel>性别</InputLabel>
-            <Select name="gender" value={form!.gender} label="性别" onChange={handleSelectChange} required>
+            <Select name="gender" value={form!.gender || ""} label="性别" onChange={handleSelectChange} required>
               <MenuItem value="male">男</MenuItem>
               <MenuItem value="female">女</MenuItem>
               <MenuItem value="other">其他</MenuItem>
             </Select>
           </FormControl>
           <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="年龄" name="age" value={form!.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 10, max: 150 }} />
-            <FormControl component="fieldset" sx={{ mt: 2 }}>
+            <TextField label="年龄" name="age" value={form!.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
+            <FormControl sx={{ mt: 2 }}>
               <RadioGroup row value={privacy.age} onChange={handleRadioChange('age')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
@@ -335,8 +424,8 @@ export default function ProfilePage() {
             </FormControl>
           </Box>
           <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="身高(cm)" name="height" value={form!.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
-            <FormControl component="fieldset" sx={{ mt: 2 }}>
+            <TextField label="身高(cm)" name="height" value={form!.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
+            <FormControl sx={{ mt: 2 }}>
               <RadioGroup row value={privacy.height} onChange={handleRadioChange('height')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
@@ -346,21 +435,21 @@ export default function ProfilePage() {
           <Box display="flex" alignItems="center" gap={2}>
             <FormControl fullWidth margin="normal">
               <InputLabel>学历</InputLabel>
-              <Select name="education" value={form!.education} label="学历" onChange={handleSelectChange}>
+              <Select name="education" value={form!.education || ""} label="学历" onChange={handleSelectChange}>
                 {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
               </Select>
             </FormControl>
-            <FormControl component="fieldset" sx={{ mt: 2 }}>
+            <FormControl sx={{ mt: 2 }}>
               <RadioGroup row value={privacy.education} onChange={handleRadioChange('education')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
               </RadioGroup>
             </FormControl>
           </Box>
-          <TextField label="个人描述" name="description" value={escapeHTML(form!.description ?? "")} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
+          <TextField label="个人描述" name="description" value={form!.description ?? ""} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
           <FormControl fullWidth margin="normal">
             <InputLabel>是否公开到友谊广场</InputLabel>
-            <Select name="is_public" value={form!.is_public} label="是否公开到友谊广场" onChange={handleSelectChange} required>
+            <Select name="is_public" value={form!.is_public || ""} label="是否公开到友谊广场" onChange={handleSelectChange} required>
               <MenuItem value="1">公开</MenuItem>
               <MenuItem value="0">隐藏</MenuItem>
             </Select>
@@ -385,8 +474,8 @@ export default function ProfilePage() {
             </label>
             <Grid container spacing={1} mt={1}>
               {lifePhotoUrls.map((url, idx) => (
-                <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1, position: 'relative' }}>
-                  <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+                <Box key={idx} sx={{ width: 200, height: 200, display: 'inline-block', mr: 1, position: 'relative' }}>
+                  <Box component="img" src={url} sx={{ width: 200, height: 200, objectFit: 'cover' }} />
                   <IconButton size="small" sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'white' }} onClick={() => handleDeleteLifePhoto(idx)}>
                     ×
                   </IconButton>
@@ -397,7 +486,13 @@ export default function ProfilePage() {
           {error && <Typography color="error" mt={1}>{error}</Typography>}
           <Box display="flex" alignItems="center" justifyContent="flex-end" gap={2} mb={2}>
             <Button type="submit" variant="contained" color="primary" sx={{ minWidth: 120 }} startIcon={<SaveIcon />} disabled={saving}>{saving ? '保存中...' : '保存修改'}</Button>
-            <Button type="button" variant="outlined" color="primary" sx={{ minWidth: 120 }} startIcon={<CloseIcon />} onClick={() => { setEditMode(false); setForm(formBackup!); setError(""); }} disabled={saving}>取消</Button>
+            <Button type="button" variant="outlined" color="primary" sx={{ minWidth: 120 }} startIcon={<CloseIcon />} onClick={() => { 
+              setEditMode(false); 
+              setForm(formBackup!); 
+              setLifePhotos([]);
+              setLifePhotoUrls(originalLifePhotoUrls);
+              setError(""); 
+            }} disabled={saving}>取消</Button>
           </Box>
         </form>
       </Box>
@@ -407,11 +502,34 @@ export default function ProfilePage() {
         <Button variant="outlined" color="primary" onClick={() => setPwdDialogOpen(true)} fullWidth sx={{ mb: 2 }}>修改密码</Button>
         <Button variant="outlined" color="error" onClick={() => setDialogOpen(true)} fullWidth>账号注销</Button>
       </Box>
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-        <DialogTitle>提示</DialogTitle>
-        <DialogContent>AI正在忙其他事情，还没有开发注销功能，如果要删除账号请联系网站所有者。</DialogContent>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>确认注销账号</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" color="error" sx={{ mb: 2 }}>
+            警告：此操作不可逆！
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            注销账号后，您的所有数据将被永久删除，包括：
+          </Typography>
+          <Typography variant="body2" component="ul" sx={{ pl: 2, mb: 2 }}>
+            <li>个人信息和头像</li>
+            <li>生活照片</li>
+            <li>账号登录记录</li>
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            确定要注销账号吗？
+          </Typography>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>关闭</Button>
+          <Button onClick={() => setDialogOpen(false)}>取消</Button>
+          <Button 
+            variant="contained" 
+            color="error" 
+            onClick={handleDeleteAccount}
+            disabled={deleting}
+          >
+            {deleting ? '注销中...' : '确认注销'}
+          </Button>
         </DialogActions>
       </Dialog>
       <Dialog open={pwdDialogOpen} onClose={() => setPwdDialogOpen(false)}>

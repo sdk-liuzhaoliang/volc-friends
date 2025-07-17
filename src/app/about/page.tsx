@@ -18,8 +18,6 @@ export default function AboutPage() {
         <Typography variant="body2" mb={2}>chenshize</Typography>
         <Typography variant="subtitle1" fontWeight={600} mb={1}>IDE：</Typography>
         <Typography variant="body2" mb={2}>Cursor</Typography>
-        <Typography variant="subtitle1" fontWeight={600} mb={1}>大模型：</Typography>
-        <Typography variant="body2" mb={2}>Claude-4-Sonnet</Typography>
         <Typography variant="subtitle1" fontWeight={600} mb={1}>开发框架：</Typography>
         <Typography variant="body2" mb={2}>Next.js</Typography>
         <Typography variant="subtitle1" fontWeight={600} mb={1}>UI框架：</Typography>

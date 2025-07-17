@@ -12,6 +12,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 const educationOptions = ["高中及以下", "大专", "本科", "硕士", "博士"];
 
@@ -27,6 +28,8 @@ export default function RegisterPage() {
     education: "本科",
     description: "",
     is_public: "1",
+    email: "",
+    captcha: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -40,9 +43,21 @@ export default function RegisterPage() {
   const [dialogMsg, setDialogMsg] = useState("");
   const [agree, setAgree] = useState(false);
   const [protocolOpen, setProtocolOpen] = useState(false);
+  const [captchaUrl, setCaptchaUrl] = useState("");
+  const [captchaId, setCaptchaId] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // 对年龄和身高字段进行数字验证
+    if ((name === 'age' || name === 'height') && value !== '') {
+      const numValue = Number(value);
+      if (isNaN(numValue)) {
+        return; // 如果不是数字，不更新状态
+      }
+    }
+    
+    setForm({ ...form, [name]: value });
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,7 +149,7 @@ export default function RegisterPage() {
       return;
     }
     // 用户名唯一性前端提示
-    const checkRes = await fetch(`/api/auth/check-username?username=${encodeURIComponent(form.username)}`);
+    const checkRes = await fetch(`/api/auth/register?username=${encodeURIComponent(form.username)}`);
     const checkData = await checkRes.json();
     if (!checkRes.ok || checkData.exists) {
       setError('用户名已存在');
@@ -144,6 +159,11 @@ export default function RegisterPage() {
     if (form.password.length < 7 || !/[A-Za-z]/.test(form.password) || !/[0-9]/.test(form.password)) {
       setError("密码必须大于6位且包含字母和数字");
       setLoading(false);
+      return;
+    }
+    // 验证码校验
+    if (!form.captcha) {
+      setError('请输入验证码');
       return;
     }
     setLoading(true);
@@ -158,8 +178,16 @@ export default function RegisterPage() {
       // 注册
       const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, avatar: avatarUrl, life_photos: lifePhotoUrls, is_public: form.is_public === "1" ? "1" : "0" })
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          ...form, 
+          avatar: avatarUrl, 
+          life_photos: lifePhotoUrls, 
+          is_public: form.is_public === "1" ? "1" : "0",
+          captchaId: captchaId
+        })
       });
       const data = await res.json();
       if (data.success) {
@@ -191,6 +219,24 @@ export default function RegisterPage() {
     setForm({ ...form, is_public: e.target.value });
   };
 
+  // 生成验证码
+  const generateCaptcha = async () => {
+    try {
+      const response = await fetch('/api/auth/captcha');
+      const svgText = await response.text();
+      const id = response.headers.get('X-Captcha-Id');
+      setCaptchaUrl(`data:image/svg+xml;base64,${btoa(svgText)}`);
+      setCaptchaId(id || '');
+    } catch (error) {
+      console.error('生成验证码失败:', error);
+    }
+  };
+
+  // 组件加载时生成验证码
+  React.useEffect(() => {
+    generateCaptcha();
+  }, []);
+
   if (success) {
     return (
       <Box maxWidth={400} mx="auto" mt={8} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff" textAlign="center">
@@ -210,8 +256,8 @@ export default function RegisterPage() {
         <Typography variant="h5">注册账号</Typography>
       </Box>
       <form onSubmit={handleSubmit}>
-        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleInputChange} fullWidth margin="normal" required inputProps={{ maxLength: 32 }} />
-        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleInputChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"} inputProps={{ maxLength: 64 }}
+        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
+        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleInputChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"}
           InputProps={{
             endAdornment: (
               <IconButton onClick={() => setShowPassword(v => !v)} edge="end" tabIndex={-1}>
@@ -220,7 +266,7 @@ export default function RegisterPage() {
             )
           }}
         />
-        <TextField label="联系邮箱" name="email" value={form.email ?? ""} onChange={handleInputChange} fullWidth margin="normal" inputProps={{ maxLength: 128 }} />
+        <TextField label="联系邮箱" name="email" value={form.email ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="email" />
         <TextField label="昵称" name="nickname" value={form.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
         <FormControl fullWidth margin="normal">
           <InputLabel>性别</InputLabel>
@@ -230,8 +276,8 @@ export default function RegisterPage() {
             <MenuItem value="other">其他</MenuItem>
           </Select>
         </FormControl>
-        <TextField label="年龄（选填）" name="age" value={form.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 10, max: 150 }} />
-        <TextField label="身高(cm, 选填)" name="height" value={form.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="number" inputProps={{ min: 100, max: 250 }} />
+        <TextField label="年龄（选填）" name="age" value={form.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
+        <TextField label="身高(cm, 选填)" name="height" value={form.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
         <FormControl fullWidth margin="normal">
           <InputLabel>学历（选填）</InputLabel>
           <Select name="education" value={form.education} label="学历（选填）" onChange={handleEducationChange}>
@@ -247,6 +293,58 @@ export default function RegisterPage() {
             <MenuItem value="0">隐藏</MenuItem>
           </Select>
         </FormControl>
+        
+        {/* 验证码 */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
+          <TextField
+            label="验证码"
+            name="captcha"
+            value={form.captcha}
+            onChange={handleInputChange}
+            sx={{ flex: 1 }}
+            required
+            placeholder="请输入验证码"
+          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {captchaUrl && (
+              <>
+                <Box
+                  component="img"
+                  src={captchaUrl}
+                  alt="验证码"
+                  sx={{ 
+                    width: 120, 
+                    height: 40,
+                    border: '1px solid #ddd',
+                    borderRadius: 1,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.2s',
+                    '&:hover': {
+                      opacity: 0.8
+                    }
+                  }}
+                  onClick={generateCaptcha}
+                  title="点击刷新验证码"
+                />
+                <IconButton
+                  size="small"
+                  onClick={generateCaptcha}
+                  sx={{
+                    backgroundColor: '#f5f5f5',
+                    border: '1px solid #ddd',
+                    '&:hover': {
+                      backgroundColor: '#e0e0e0',
+                      transform: 'rotate(180deg)'
+                    },
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <RefreshIcon sx={{ fontSize: 18, color: '#666' }} />
+                </IconButton>
+              </>
+            )}
+          </Box>
+        </Box>
         <Box mt={2} mb={1}>
           <Typography>头像（必填）</Typography>
           <label htmlFor="avatar-upload">

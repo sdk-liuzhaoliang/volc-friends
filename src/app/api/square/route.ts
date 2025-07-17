@@ -9,30 +9,46 @@ export async function GET(req: NextRequest) {
     filters.push('gender = $' + (params.length + 1));
     params.push(searchParams.get('gender'));
   }
+  // 检查是否需要添加隐私条件
+  let hasAgeFilter = false;
+  let hasHeightFilter = false;
+  let hasEducationFilter = false;
+
   if (searchParams.get('minAge')) {
-    filters.push('age_privacy = ' + "'public'");
+    hasAgeFilter = true;
     filters.push('age >= $' + (params.length + 1));
     params.push(Number(searchParams.get('minAge')));
   }
   if (searchParams.get('maxAge')) {
-    filters.push('age_privacy = ' + "'public'");
+    hasAgeFilter = true;
     filters.push('age <= $' + (params.length + 1));
     params.push(Number(searchParams.get('maxAge')));
   }
   if (searchParams.get('minHeight')) {
-    filters.push('height_privacy = ' + "'public'");
+    hasHeightFilter = true;
     filters.push('height >= $' + (params.length + 1));
     params.push(Number(searchParams.get('minHeight')));
   }
   if (searchParams.get('maxHeight')) {
-    filters.push('height_privacy = ' + "'public'");
+    hasHeightFilter = true;
     filters.push('height <= $' + (params.length + 1));
     params.push(Number(searchParams.get('maxHeight')));
   }
   if (searchParams.get('education')) {
-    filters.push('education_privacy = ' + "'public'");
+    hasEducationFilter = true;
     filters.push('education = $' + (params.length + 1));
     params.push(searchParams.get('education'));
+  }
+
+  // 添加隐私条件（只添加一次）
+  if (hasAgeFilter) {
+    filters.push('age_privacy = ' + "'public'");
+  }
+  if (hasHeightFilter) {
+    filters.push('height_privacy = ' + "'public'");
+  }
+  if (hasEducationFilter) {
+    filters.push('education_privacy = ' + "'public'");
   }
   let sql = 'SELECT id, username, nickname, gender, email, email_privacy, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public, created_at, last_login FROM users WHERE is_public = $' + (params.length + 1);
   params.push('1');
@@ -47,8 +63,14 @@ export async function GET(req: NextRequest) {
   const { rows } = await pool.query(sql, params);
   // 处理 life_photos 字段为数组
   rows.forEach(u => {
-    if (u.life_photos) {
-      try { u.life_photos = JSON.parse(u.life_photos); } catch {}
+    if (u.life_photos && u.life_photos !== 'null' && u.life_photos !== '') {
+      try { 
+        u.life_photos = JSON.parse(u.life_photos); 
+      } catch {
+        u.life_photos = [];
+      }
+    } else {
+      u.life_photos = [];
     }
   });
   // 只返回允许公开的字段
