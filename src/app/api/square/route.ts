@@ -1,45 +1,45 @@
+import pool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/database';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const gender = searchParams.get('gender');
-  const minAge = searchParams.get('minAge');
-  const maxAge = searchParams.get('maxAge');
-  const minHeight = searchParams.get('minHeight');
-  const maxHeight = searchParams.get('maxHeight');
-  const education = searchParams.get('education');
-
-  let sql = 'SELECT id, nickname, gender, age, age_privacy, height, height_privacy, education, education_privacy, email, email_privacy, avatar, life_photos, description FROM users WHERE is_public = 1';
-  const params: unknown[] = [];
-  if (gender) {
-    sql += ' AND gender = ?';
-    params.push(gender);
+  const filters = [];
+  const params = [];
+  if (searchParams.get('gender')) {
+    filters.push('gender = $' + (params.length + 1));
+    params.push(searchParams.get('gender'));
   }
-  if (minAge) {
-    sql += ' AND age >= ?';
-    params.push(Number(minAge));
+  if (searchParams.get('minAge')) {
+    filters.push('age >= $' + (params.length + 1));
+    params.push(Number(searchParams.get('minAge')));
   }
-  if (maxAge) {
-    sql += ' AND age <= ?';
-    params.push(Number(maxAge));
+  if (searchParams.get('maxAge')) {
+    filters.push('age <= $' + (params.length + 1));
+    params.push(Number(searchParams.get('maxAge')));
   }
-  if (minHeight) {
-    sql += ' AND height >= ?';
-    params.push(Number(minHeight));
+  if (searchParams.get('minHeight')) {
+    filters.push('height >= $' + (params.length + 1));
+    params.push(Number(searchParams.get('minHeight')));
   }
-  if (maxHeight) {
-    sql += ' AND height <= ?';
-    params.push(Number(maxHeight));
+  if (searchParams.get('maxHeight')) {
+    filters.push('height <= $' + (params.length + 1));
+    params.push(Number(searchParams.get('maxHeight')));
   }
-  if (education) {
-    sql += ' AND education = ?';
-    params.push(education);
+  if (searchParams.get('education')) {
+    filters.push('education = $' + (params.length + 1));
+    params.push(searchParams.get('education'));
   }
-  sql += ' ORDER BY id DESC';
-  const users = db.prepare(sql).all(...params).map((u: Record<string, unknown>) => ({
-    ...u,
-    life_photos: u.life_photos ? JSON.parse(u.life_photos as string) : []
-  }));
-  return NextResponse.json({ users });
+  let sql = 'SELECT id, username, nickname, gender, email, email_privacy, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public, created_at, last_login FROM users WHERE is_public = $' + (params.length + 1);
+  params.push('1');
+  if (filters.length > 0) {
+    sql += ' AND ' + filters.join(' AND ');
+  }
+  const { rows } = await pool.query(sql, params);
+  // 处理 life_photos 字段为数组
+  rows.forEach(u => {
+    if (u.life_photos) {
+      try { u.life_photos = JSON.parse(u.life_photos); } catch {}
+    }
+  });
+  return NextResponse.json({ users: rows });
 } 

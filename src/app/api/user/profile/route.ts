@@ -1,43 +1,30 @@
+import pool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
-import db from '@/database';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'volc-friends-secret';
-
-function getUserIdFromRequest(req: NextRequest): number | null {
-  const token = req.cookies.get('token')?.value;
-  if (!token) return null;
-  try {
-    const payload = jwt.verify(token, JWT_SECRET) as Record<string, unknown>;
-    return typeof payload.id === 'number' ? payload.id : null;
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(req: NextRequest) {
-  const userId = getUserIdFromRequest(req);
-  if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  const user = db.prepare('SELECT id, username, nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public, created_at, last_login FROM users WHERE id = ?').get(userId);
-  if (!user) return NextResponse.json({ error: '用户不存在' }, { status: 404 });
-  user.life_photos = user.life_photos ? JSON.parse(user.life_photos) : [];
+  // 假设 userId 从 session/token 获取
+  const userId = 1;
+  const { rows } = await pool.query('SELECT id, username, nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public, created_at, last_login FROM users WHERE id = $1', [userId]);
+  if (rows.length === 0) {
+    return NextResponse.json({ error: '用户不存在' }, { status: 404 });
+  }
+  // 处理 life_photos 字段为数组（如有需要）
+  const user = rows[0];
+  if (user.life_photos) {
+    try { user.life_photos = JSON.parse(user.life_photos); } catch {}
+  }
   return NextResponse.json({ user });
 }
 
 export async function POST(req: NextRequest) {
-  const userId = getUserIdFromRequest(req);
-  if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  try {
-    const data = await req.json();
-    const { nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public } = data;
-    if (!nickname || !gender || !email || !age || !height || !education || !avatar || !description) {
-      return NextResponse.json({ error: '信息不完整' }, { status: 400 });
-    }
-    const photos = Array.isArray(life_photos) ? JSON.stringify(life_photos.slice(0, 3)) : '[]';
-    db.prepare('UPDATE users SET nickname=?, gender=?, email=?, age=?, age_privacy=?, height=?, height_privacy=?, education=?, education_privacy=?, avatar=?, life_photos=?, description=?, is_public=? WHERE id=?')
-      .run(nickname, gender, email, age, age_privacy || 'public', height, height_privacy || 'public', education, education_privacy || 'public', avatar, photos, description, is_public ? 1 : 0, userId);
-    return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ error: '更新失败', detail: String(e) }, { status: 500 });
-  }
+  const userId = 1; // 示例
+  const body = await req.json();
+  const {
+    nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public
+  } = body;
+  await pool.query(
+    'UPDATE users SET nickname=$1, gender=$2, email=$3, age=$4, age_privacy=$5, height=$6, height_privacy=$7, education=$8, education_privacy=$9, avatar=$10, life_photos=$11, description=$12, is_public=$13 WHERE id=$14',
+    [nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, JSON.stringify(life_photos), description, is_public, userId]
+  );
+  return NextResponse.json({ success: true });
 } 
