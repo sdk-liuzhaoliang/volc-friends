@@ -44,6 +44,58 @@ export default function RegisterPage() {
   const [captchaUrl, setCaptchaUrl] = useState("");
   const [captchaId, setCaptchaId] = useState("");
 
+  // 1. 在组件顶部添加校验状态
+  const [fieldErrors, setFieldErrors] = useState({
+    username: '',
+    password: '',
+    email: '',
+    nickname: '',
+    age: '',
+    height: '',
+    description: '',
+    captcha: '',
+  });
+
+  // 2. 实时校验函数
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'username':
+        if (!value) return '用户名不能为空';
+        if (value.length < 6 || value.length > 32) return '用户名需6~32位';
+        if (!/^[A-Za-z0-9]+$/.test(value)) return '仅支持字母和数字';
+        return '';
+      case 'password':
+        if (!value) return '密码不能为空';
+        if (value.length < 6 || value.length > 64) return '密码需6~64位';
+        if (!/[A-Za-z]/.test(value) || !/[0-9]/.test(value)) return '需包含字母和数字';
+        return '';
+      case 'email':
+        if (value && !/^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$/.test(value)) return '邮箱格式不正确';
+        if (value && value.length > 128) return '邮箱不能超过128位';
+        return '';
+      case 'nickname':
+        if (!value) return '昵称不能为空';
+        if (value.length > 20) return '昵称不能超过20字';
+        return '';
+      case 'age':
+        if (value && (Number(value) < 10 || Number(value) > 150)) return '年龄需在10~150之间';
+        return '';
+      case 'height':
+        if (value && (Number(value) < 30 || Number(value) > 250)) return '身高需在30~250之间';
+        return '';
+      case 'description':
+        if (!value) return '个人描述不能为空';
+        if (value.length > 200) return '个人描述不能超过200字';
+        return '';
+      case 'captcha':
+        if (!value) return '请输入验证码';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // 3. 修改handleInputChange为实时校验
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
@@ -56,6 +108,7 @@ export default function RegisterPage() {
     }
     
     setForm({ ...form, [name]: value });
+    setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,6 +148,7 @@ export default function RegisterPage() {
     throw new Error('上传失败');
   };
 
+  // 4. 表单提交时只校验所有字段并阻止提交
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -104,6 +158,22 @@ export default function RegisterPage() {
     }
     if (!agree) {
       setError('请先阅读并同意《VolcFriends站点协议》');
+      return;
+    }
+    // 校验所有字段
+    const newErrors = {
+      username: validateField('username', form.username),
+      password: validateField('password', form.password),
+      email: validateField('email', form.email),
+      nickname: validateField('nickname', form.nickname),
+      age: validateField('age', form.age),
+      height: validateField('height', form.height),
+      description: validateField('description', form.description),
+      captcha: validateField('captcha', form.captcha),
+    };
+    setFieldErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) {
+      setError('请修正所有字段错误后再注册');
       return;
     }
     // 必填项校验
@@ -246,7 +316,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <Box maxWidth={500} mx="auto" mt={4} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff">
+    <Box maxWidth={625} mx="auto" mt={4} p={3} boxShadow={2} borderRadius={2} bgcolor="#fff">
       <Box display="flex" alignItems="center" mb={2}>
         <IconButton onClick={() => router.back()} sx={{ mr: 1 }}>
           <ArrowBackIosNewIcon fontSize="small" />
@@ -254,8 +324,10 @@ export default function RegisterPage() {
         <Typography variant="h5">注册账号</Typography>
       </Box>
       <form onSubmit={handleSubmit}>
-        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
-        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleInputChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"}
+        <TextField label="用户名" name="username" value={form.username ?? ""} onChange={handleInputChange} fullWidth margin="normal" required variant="outlined"
+          error={!!fieldErrors.username} helperText={fieldErrors.username || "6~32位，仅支持字母、数字，需唯一"} inputProps={{ maxLength: 32 }} />
+        <TextField label="密码" name="password" value={form.password ?? ""} onChange={handleInputChange} fullWidth margin="normal" required type={showPassword ? "text" : "password"} variant="outlined"
+          error={!!fieldErrors.password} helperText={fieldErrors.password || "6~64位，需包含字母和数字"} inputProps={{ maxLength: 64 }}
           InputProps={{
             endAdornment: (
               <IconButton onClick={() => setShowPassword(v => !v)} edge="end" tabIndex={-1}>
@@ -264,9 +336,12 @@ export default function RegisterPage() {
             )
           }}
         />
-        <TextField label="联系邮箱" name="email" value={form.email ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="email" />
-        <TextField label="昵称" name="nickname" value={form.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
-        <FormControl fullWidth margin="normal">
+        <TextField label="联系邮箱" name="email" value={form.email ?? ""} onChange={handleInputChange} fullWidth margin="normal" type="email" variant="outlined"
+          error={!!fieldErrors.email} helperText={fieldErrors.email || "用于找回账号，最多128字符，格式如 user@example.com"} inputProps={{ maxLength: 128 }} />
+        <TextField label="昵称" name="nickname" value={form.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required variant="outlined"
+          error={!!fieldErrors.nickname} helperText={fieldErrors.nickname || "最多20字，展示在广场和个人页"} inputProps={{ maxLength: 20 }} />
+        {/* 性别和年龄一行 */}
+        <FormControl fullWidth margin="dense" variant="outlined" size="small">
           <InputLabel>性别</InputLabel>
           <Select name="gender" value={form.gender} label="性别" onChange={handleGenderChange} required>
             <MenuItem value="male">男</MenuItem>
@@ -274,34 +349,40 @@ export default function RegisterPage() {
             <MenuItem value="other">其他</MenuItem>
           </Select>
         </FormControl>
-        <TextField label="年龄（选填）" name="age" value={form.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
-        <TextField label="身高(cm, 选填)" name="height" value={form.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>学历（选填）</InputLabel>
-          <Select name="education" value={form.education} label="学历（选填）" onChange={handleEducationChange}>
+        <TextField label="年龄" name="age" value={form.age ?? ""} onChange={handleInputChange} fullWidth margin="dense" variant="outlined" size="small"
+          error={!!fieldErrors.age} helperText={fieldErrors.age || "10~150之间，选填"} inputProps={{ min: 10, max: 150, type: 'number', placeholder: '选填' }} />
+        <TextField label="身高(cm)" name="height" value={form.height ?? ""} onChange={handleInputChange} fullWidth margin="dense" variant="outlined" size="small"
+          error={!!fieldErrors.height} helperText={fieldErrors.height || "30~250之间，选填"} inputProps={{ min: 30, max: 250, type: 'number', placeholder: '选填' }} />
+        <FormControl fullWidth margin="dense" variant="outlined" size="small">
+          <InputLabel>学历</InputLabel>
+          <Select name="education" value={form.education} label="学历" onChange={handleEducationChange}>
             <MenuItem value="">未填写</MenuItem>
             {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
-        <TextField label="个人描述" name="description" value={form.description ?? ""} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
-        <FormControl fullWidth margin="normal">
+        <TextField label="个人描述" name="description" value={form.description ?? ""} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} variant="outlined"
+          error={!!fieldErrors.description} helperText={fieldErrors.description || "最多200字，真实简洁更受欢迎"} inputProps={{ maxLength: 200 }} />
+        <FormControl fullWidth margin="normal" variant="outlined">
           <InputLabel>是否公开</InputLabel>
           <Select name="is_public" value={form.is_public} label="是否公开" onChange={handleIsPublicChange} required>
             <MenuItem value="1">公开</MenuItem>
             <MenuItem value="0">隐藏</MenuItem>
           </Select>
         </FormControl>
-        
-        {/* 验证码 */}
+        {/* 验证码输入区对齐优化 */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 2 }}>
           <TextField
             label="验证码"
             name="captcha"
             value={form.captcha}
             onChange={handleInputChange}
-            sx={{ flex: 1 }}
             required
             placeholder="请输入验证码"
+            error={!!fieldErrors.captcha}
+            helperText={fieldErrors.captcha || ""}
+            variant="outlined"
+            size="small"
+            sx={{ width: 180 }}
           />
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {captchaUrl && (
@@ -317,6 +398,8 @@ export default function RegisterPage() {
                     borderRadius: 1,
                     cursor: 'pointer',
                     transition: 'opacity 0.2s',
+                    objectFit: 'contain',
+                    display: 'block',
                     '&:hover': {
                       opacity: 0.8
                     }
@@ -330,6 +413,9 @@ export default function RegisterPage() {
                   sx={{
                     backgroundColor: '#f5f5f5',
                     border: '1px solid #ddd',
+                    height: 40,
+                    width: 40,
+                    ml: 0.5,
                     '&:hover': {
                       backgroundColor: '#e0e0e0',
                       transform: 'rotate(180deg)'
@@ -343,8 +429,9 @@ export default function RegisterPage() {
             )}
           </Box>
         </Box>
-        <Box mt={2} mb={1}>
-          <Typography>头像（必填）</Typography>
+        {/* 头像上传区 */}
+        <Box mt={2} mb={1} p={2} bgcolor="#f7f9fb" borderRadius={2}>
+          <Typography fontWeight={600} mb={1}>头像（必填）</Typography>
           <label htmlFor="avatar-upload">
             <input accept="image/*" id="avatar-upload" type="file" hidden onChange={handleAvatarChange} />
             <IconButton color="primary" component="span">
@@ -353,8 +440,9 @@ export default function RegisterPage() {
           </label>
           {avatarUrl && <Avatar src={avatarUrl} sx={{ width: 56, height: 56, ml: 2 }} />}
         </Box>
-        <Box mt={2} mb={1}>
-          <Typography>生活照片（最多3张，选填）</Typography>
+        {/* 生活照上传区 */}
+        <Box mt={2} mb={1} p={2} bgcolor="#f7f9fb" borderRadius={2}>
+          <Typography fontWeight={600} mb={1}>生活照片（最多3张，选填）</Typography>
           <label htmlFor="life-photo-upload">
             <input accept="image/*" id="life-photo-upload" type="file" hidden multiple onChange={handleLifePhotosChange} />
             <IconButton color="primary" component="span">
@@ -363,8 +451,8 @@ export default function RegisterPage() {
           </label>
           <Grid container spacing={1} mt={1}>
             {lifePhotoUrls.map((url, idx) => (
-              <Box key={idx} sx={{ width: 56, height: 56, display: 'inline-block', mr: 1, position: 'relative' }}>
-                <Avatar src={url} variant="rounded" sx={{ width: 56, height: 56 }} />
+              <Box key={idx} sx={{ width: 200, height: 200, display: 'inline-block', mr: 1, position: 'relative' }}>
+                <Box component="img" src={url} sx={{ width: 200, height: 200, objectFit: 'cover' }} />
                 <IconButton size="small" sx={{ position: 'absolute', top: -8, right: -8, bgcolor: 'white' }} onClick={() => handleDeleteLifePhoto(idx)}>
                   ×
                 </IconButton>

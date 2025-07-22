@@ -32,6 +32,42 @@ export default function ProfilePage() {
   const [formBackup, setFormBackup] = useState<typeof form | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // 1. 在组件顶部添加校验状态
+  const [fieldErrors, setFieldErrors] = useState({
+    email: '',
+    nickname: '',
+    age: '',
+    height: '',
+    description: '',
+  });
+
+  // 2. 实时校验函数
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case 'email':
+        if (!value) return '邮箱不能为空';
+        if (!/^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$/.test(value)) return '邮箱格式不正确';
+        if (value.length > 128) return '邮箱不能超过128位';
+        return '';
+      case 'nickname':
+        if (!value) return '昵称不能为空';
+        if (value.length > 20) return '昵称不能超过20字';
+        return '';
+      case 'age':
+        if (value && (Number(value) < 10 || Number(value) > 150)) return '年龄需在10~150之间';
+        return '';
+      case 'height':
+        if (value && (Number(value) < 30 || Number(value) > 250)) return '身高需在30~250之间';
+        return '';
+      case 'description':
+        if (!value) return '个人描述不能为空';
+        if (value.length > 200) return '个人描述不能超过200字';
+        return '';
+      default:
+        return '';
+    }
+  };
+
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     fetch('/api/user/profile', {
@@ -64,8 +100,11 @@ export default function ProfilePage() {
     });
   }, [router]);
 
+  // 3. 修改handleInputChange为实时校验
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value } as Partial<User>);
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value } as Partial<User>);
+    setFieldErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
   };
   const handleSelectChange = (e: SelectChangeEvent) => {
     const name = e.target.name as string;
@@ -164,34 +203,22 @@ export default function ProfilePage() {
     throw new Error('上传失败');
   };
 
+  // 4. 表单提交时只校验所有字段并阻止提交
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form) return;
     setError("");
-    // 前端必填校验
-    if (!form.nickname || !form.gender || !form.email || !form.avatar || !form.description) {
-      setError('请填写所有必填项');
-      return;
-    }
-    // 邮箱格式校验
-    const emailReg = /^[\w.-]+@[\w.-]+\.[A-Za-z]{2,}$/;
-    if (!emailReg.test(form.email)) {
-      setError('邮箱格式不正确');
-      return;
-    }
-    // 邮箱长度校验
-    if (form.email && form.email.length > 128) {
-      setError('邮箱不能超过128位');
-      return;
-    }
-    // 昵称长度校验
-    if (form.nickname && form.nickname.length > 20) {
-      setError('昵称不能超过20字');
-      return;
-    }
-    // 个人描述长度校验
-    if (form.description && form.description.length > 200) {
-      setError('个人描述不能超过200字');
+    // 校验所有字段
+    const newErrors = {
+      email: validateField('email', form.email || ''),
+      nickname: validateField('nickname', form.nickname || ''),
+      age: validateField('age', form.age ? String(form.age) : ''),
+      height: validateField('height', form.height ? String(form.height) : ''),
+      description: validateField('description', form.description || ''),
+    };
+    setFieldErrors(newErrors);
+    if (Object.values(newErrors).some(Boolean)) {
+      setError('请修正所有字段错误后再保存');
       return;
     }
     // 生活照数量校验
@@ -401,9 +428,11 @@ export default function ProfilePage() {
         </Box>
         <form onSubmit={handleSave}>
           <TextField label="联系邮箱" name="email" value={form!.email ?? ""}
-            onChange={handleInputChange} fullWidth margin="normal" required />
-          <TextField label="昵称" name="nickname" value={form!.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required />
-          <FormControl fullWidth margin="normal">
+            onChange={handleInputChange} fullWidth margin="normal" required
+            error={!!fieldErrors.email} helperText={fieldErrors.email || "用于找回账号，最多128字符，格式如 user@example.com"} inputProps={{ maxLength: 128 }} />
+          <TextField label="昵称" name="nickname" value={form!.nickname ?? ""} onChange={handleInputChange} fullWidth margin="normal" required
+            error={!!fieldErrors.nickname} helperText={fieldErrors.nickname || "最多20字，展示在广场和个人页"} inputProps={{ maxLength: 20 }} />
+          <FormControl fullWidth margin="normal" required>
             <InputLabel>性别</InputLabel>
             <Select name="gender" value={form!.gender || ""} label="性别" onChange={handleSelectChange} required>
               <MenuItem value="male">男</MenuItem>
@@ -411,48 +440,51 @@ export default function ProfilePage() {
               <MenuItem value="other">其他</MenuItem>
             </Select>
           </FormControl>
-          <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="年龄" name="age" value={form!.age ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
-            <FormControl sx={{ mt: 2 }}>
+          <Box display="flex" alignItems="flex-end" gap={2}>
+            <TextField label="年龄" name="age" value={form!.age ?? ""} onChange={handleInputChange} fullWidth margin="normal"
+              error={!!fieldErrors.age} helperText={fieldErrors.age || "10~150之间，选填"} inputProps={{ min: 10, max: 150, type: 'number', placeholder: '选填' }} />
+            <FormControl sx={{ mt: 2, minWidth: 120 }}>
               <RadioGroup row value={privacy.age} onChange={handleRadioChange('age')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
               </RadioGroup>
             </FormControl>
           </Box>
-          <Box display="flex" alignItems="center" gap={2}>
-            <TextField label="身高(cm)" name="height" value={form!.height ?? ""} onChange={handleInputChange} fullWidth margin="normal" />
-            <FormControl sx={{ mt: 2 }}>
+          <Box display="flex" alignItems="flex-end" gap={2}>
+            <TextField label="身高(cm)" name="height" value={form!.height ?? ""} onChange={handleInputChange} fullWidth margin="normal"
+              error={!!fieldErrors.height} helperText={fieldErrors.height || "30~250之间，选填"} inputProps={{ min: 30, max: 250, type: 'number', placeholder: '选填' }} />
+            <FormControl sx={{ mt: 2, minWidth: 120 }}>
               <RadioGroup row value={privacy.height} onChange={handleRadioChange('height')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
               </RadioGroup>
             </FormControl>
           </Box>
-          <Box display="flex" alignItems="center" gap={2}>
+          <Box display="flex" alignItems="flex-end" gap={2}>
             <FormControl fullWidth margin="normal">
               <InputLabel>学历</InputLabel>
               <Select name="education" value={form!.education || ""} label="学历" onChange={handleSelectChange}>
                 {educationOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
               </Select>
             </FormControl>
-            <FormControl sx={{ mt: 2 }}>
+            <FormControl sx={{ mt: 2, minWidth: 120 }}>
               <RadioGroup row value={privacy.education} onChange={handleRadioChange('education')}>
                 <FormControlLabel value="public" control={<Radio />} label="公开" />
                 <FormControlLabel value="private" control={<Radio />} label="保密" />
               </RadioGroup>
             </FormControl>
           </Box>
-          <TextField label="个人描述" name="description" value={form!.description ?? ""} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3} />
-          <FormControl fullWidth margin="normal">
+          <TextField label="个人描述" name="description" value={form!.description ?? ""} onChange={handleInputChange} fullWidth margin="normal" required multiline rows={3}
+            error={!!fieldErrors.description} helperText={fieldErrors.description || "最多200字，真实简洁更受欢迎"} inputProps={{ maxLength: 200 }} />
+          <FormControl fullWidth margin="normal" required>
             <InputLabel>是否公开到友谊广场</InputLabel>
             <Select name="is_public" value={form!.is_public || ""} label="是否公开到友谊广场" onChange={handleSelectChange} required>
               <MenuItem value="1">公开</MenuItem>
               <MenuItem value="0">隐藏</MenuItem>
             </Select>
           </FormControl>
-          <Box mt={2} mb={1}>
-            <Typography>头像（必填）</Typography>
+          <Box mt={2} mb={1} p={2} bgcolor="#f7f9fb" borderRadius={2}>
+            <Typography fontWeight={600} mb={1}>头像（必填）</Typography>
             <label htmlFor="avatar-upload">
               <input accept="image/*" id="avatar-upload" type="file" hidden onChange={handleAvatarChange} />
               <IconButton color="primary" component="span">
@@ -461,8 +493,8 @@ export default function ProfilePage() {
             </label>
             {avatarUrl && <Avatar src={avatarUrl} sx={{ width: 56, height: 56, ml: 2 }} />}
           </Box>
-          <Box mt={2} mb={1}>
-            <Typography>生活照片（最多3张，选填）</Typography>
+          <Box mt={2} mb={1} p={2} bgcolor="#f7f9fb" borderRadius={2}>
+            <Typography fontWeight={600} mb={1}>生活照片（最多3张，选填）</Typography>
             <label htmlFor="life-photo-upload">
               <input accept="image/*" id="life-photo-upload" type="file" hidden multiple onChange={handleLifePhotosChange} />
               <IconButton color="primary" component="span">
@@ -481,7 +513,7 @@ export default function ProfilePage() {
             </Grid>
           </Box>
           {error && <Typography color="error" mt={1}>{error}</Typography>}
-          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={2} mb={2}>
+          <Box display="flex" alignItems="center" justifyContent="flex-end" gap={2} mb={2} mt={2}>
             <Button type="submit" variant="contained" color="primary" sx={{ minWidth: 120 }} startIcon={<SaveIcon />} disabled={saving}>{saving ? '保存中...' : '保存修改'}</Button>
             <Button type="button" variant="outlined" color="primary" sx={{ minWidth: 120 }} startIcon={<CloseIcon />} onClick={() => { 
               setEditMode(false); 
