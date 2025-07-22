@@ -137,8 +137,13 @@ export default function SquarePage() {
                 bgcolor: '#fff',
                 mb: 0,
                 cursor: 'pointer',
-                transition: 'box-shadow 0.2s',
-                '&:hover': { boxShadow: '0 4px 24px 0 rgba(0,0,0,0.12)' },
+                transition: 'box-shadow 0.2s, border-color 0.2s',
+                border: '1.5px solid #e0e3ea', // 柔和灰色
+                borderColor: '#e0e3ea',
+                '&:hover': {
+                  boxShadow: '0 4px 24px 0 rgba(37,99,235,0.10)',
+                  borderColor: '#bfc5ce', // 悬浮时略微加深灰色
+                },
                 position: 'relative',
                 width: '100%',
                 minHeight: 0,
