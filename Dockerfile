@@ -4,6 +4,9 @@ FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.
 # 设置工作目录
 WORKDIR /app
 
+# 安装编译依赖
+RUN yum update -y && yum install -y python3 make gcc-c++ && ln -sf /usr/bin/python3 /usr/bin/python
+
 # 复制依赖文件
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
