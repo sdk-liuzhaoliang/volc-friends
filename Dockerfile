@@ -1,5 +1,5 @@
-# 基于官方 Node.js 18 镜像作为构建阶段
-FROM node:18-alpine AS builder
+# 基于阿里云 Node.js 18 镜像作为构建阶段
+FROM registry.cn-hangzhou.aliyuncs.com/acs/node:18-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # 生产环境镜像
-FROM node:18-alpine AS runner
+FROM registry.cn-hangzhou.aliyuncs.com/acs/node:18-alpine AS runner
 
 WORKDIR /app
 
