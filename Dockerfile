@@ -1,13 +1,11 @@
-# 基于阿里云 Node.js 20 镜像作为构建阶段
-FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS builder
+# 基于官方 Node.js 20 镜像作为构建阶段
+FROM node:20.16-alpine AS builder
 
 # 设置工作目录
 WORKDIR /app
 
-USER root
 # 安装编译依赖
-RUN yum update -y && yum install -y python3 make gcc-c++ git && ln -sf /usr/bin/python3 /usr/bin/python
-USER node
+RUN apk add --no-cache python3 make g++ git
 
 # 复制依赖文件
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
@@ -25,7 +23,7 @@ COPY . .
 RUN npm run build
 
 # 生产环境镜像
-FROM alibaba-cloud-linux-3-registry.cn-hangzhou.cr.aliyuncs.com/alinux3/node:20.16 AS runner
+FROM node:20.16-alpine AS runner
 
 WORKDIR /app
 
