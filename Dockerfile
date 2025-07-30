@@ -5,7 +5,7 @@ FROM node:20.16-alpine AS builder
 WORKDIR /app
 
 # 安装编译依赖
-RUN apk add --no-cache python3 make g++ git
+RUN apk add --no-cache python3 
 
 # 复制依赖文件
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
@@ -18,6 +18,16 @@ RUN if [ -f package-lock.json ]; then npm ci; \
 
 # 复制全部源代码
 COPY . .
+
+# 声明构建参数
+ARG TOS_ACCESS_KEY_ID
+ARG TOS_SECRET_KEY
+ARG DATABASE_URL
+
+# 设置环境变量
+ENV TOS_ACCESS_KEY_ID=$TOS_ACCESS_KEY_ID
+ENV TOS_SECRET_KEY=$TOS_SECRET_KEY
+ENV DATABASE_URL=$DATABASE_URL
 
 # 构建 Next.js 应用
 RUN npm run build

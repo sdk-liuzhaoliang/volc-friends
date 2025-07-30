@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { TosClient } from '@volcengine/tos-sdk';
+
+// 从环境变量获取 TOS 配置
+const client = new TosClient({
+  accessKeyId: process.env.TOS_ACCESS_KEY_ID|| '',
+  accessKeySecret: process.env.TOS_SECRET_KEY || '',
+  endpoint: process.env.TOS_ENDPOINT || '',
+  region:"cn-beijing"
+});
 
 export async function POST(req: NextRequest) {
   // 允许未登录用户上传图片（注册流程专用）
@@ -26,7 +34,24 @@ export async function POST(req: NextRequest) {
   if (file.size > 5 * 1024 * 1024) {
     return NextResponse.json({ error: '图片大小不能超过 5MB' }, { status: 400 });
   }
-  // 上传到 Vercel Blob，自动加随机后缀避免冲突
-  const blob = await put(file.name, file, { access: 'public', addRandomSuffix: true });
-  return NextResponse.json({ url: blob.url });
-} 
+
+  // 生成随机文件名避免冲突
+  const randomSuffix = Math.random().toString(36).substring(2, 9);
+  const objectKey = `${randomSuffix}-${file.name}`;
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const bucket = process.env.TOS_BUCKET || '';
+    const result = await client.putObject({
+      bucket,
+      key: objectKey,
+      body: Buffer.from(buffer),
+    });
+
+    const url = `https://${bucket}.${process.env.TOS_ENDPOINT}/${objectKey}`;
+    return NextResponse.json({ url });
+  } catch (error) {
+    console.error('上传到 TOS 失败:', error);
+    return NextResponse.json({ error: '文件上传失败' }, { status: 500 });
+  }
+}
