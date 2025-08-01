@@ -1,4 +1,4 @@
-import pool from '@/database';
+import getPool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
@@ -19,6 +19,7 @@ function getUserIdFromRequest(req: NextRequest): number | null {
 }
 
 export async function GET(req: NextRequest) {
+  const pool = getPool();
   const userId = getUserIdFromRequest(req);
   if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
   const { rows } = await pool.query('SELECT id, username, nickname, gender, email, age, age_privacy, height, height_privacy, education, education_privacy, avatar, life_photos, description, is_public, created_at, last_login FROM users WHERE id = $1', [userId]);
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const pool = getPool();
     const userId = getUserIdFromRequest(req);
     if (!userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
     const body = await req.json();
@@ -75,4 +77,4 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     return NextResponse.json({ error: '服务器异常', detail: String(e) }, { status: 500 });
   }
-} 
+}

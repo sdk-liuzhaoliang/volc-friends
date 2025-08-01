@@ -1,9 +1,10 @@
-import pool from '@/database';
+import getPool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 
 export async function POST(req: NextRequest) {
   try {
+    const pool = getPool();
     const { username, password, nickname, gender, age, height, education, avatar, life_photos, description, is_public, email, captcha, captchaId } = await req.json();
     
     // 验证码校验
@@ -103,6 +104,7 @@ export async function POST(req: NextRequest) {
 // 新增用户名唯一性接口
 export async function GET(req: NextRequest) {
   try {
+    const pool = getPool();
     const { searchParams } = new URL(req.url);
     const username = searchParams.get('username');
     if (!username) return NextResponse.json({ exists: false });

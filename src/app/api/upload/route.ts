@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { TosClient } from '@volcengine/tos-sdk';
 
-// 从环境变量获取 TOS 配置
-const client = new TosClient({
-  accessKeyId: process.env.TOS_ACCESS_KEY_ID|| '',
-  accessKeySecret: process.env.TOS_SECRET_KEY || '',
-  endpoint: process.env.TOS_ENDPOINT || '',
-  region:"cn-beijing"
-});
+let client: TosClient | null = null;
+
+function getTosClient() {
+  if (client) {
+    return client;
+  }
+  client = new TosClient({
+    accessKeyId: process.env.TOS_ACCESS_KEY_ID || '',
+    accessKeySecret: process.env.TOS_SECRET_KEY || '',
+    endpoint: process.env.TOS_ENDPOINT || '',
+    region: "cn-beijing"
+  });
+  return client;
+}
 
 export async function POST(req: NextRequest) {
   // 允许未登录用户上传图片（注册流程专用）
@@ -42,7 +49,7 @@ export async function POST(req: NextRequest) {
   try {
     const buffer = await file.arrayBuffer();
     const bucket = process.env.TOS_BUCKET || '';
-    const result = await client.putObject({
+    const result = await getTosClient().putObject({
       bucket,
       key: objectKey,
       body: Buffer.from(buffer),

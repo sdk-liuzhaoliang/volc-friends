@@ -1,7 +1,8 @@
-import pool from '@/database';
+import getPool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
+  const pool = getPool();
   const { searchParams } = new URL(req.url);
   const filters = [];
   const params = [];
@@ -93,4 +94,4 @@ export async function GET(req: NextRequest) {
     };
   });
   return NextResponse.json({ users: safeUsers });
-} 
+}

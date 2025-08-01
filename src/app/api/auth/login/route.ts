@@ -1,9 +1,10 @@
-import pool from '@/database';
+import getPool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export async function POST(req: NextRequest) {
+  const pool = getPool();
   const { username, password } = await req.json();
   // 用户名长度校验
   if (!username || username.length < 6 || username.length > 32) {
@@ -34,4 +35,4 @@ export async function POST(req: NextRequest) {
   const userSafe = { ...user };
   delete userSafe.password;
   return NextResponse.json({ token, user: userSafe });
-} 
+}

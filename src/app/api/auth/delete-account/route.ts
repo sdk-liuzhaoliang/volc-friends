@@ -1,4 +1,4 @@
-import pool from '@/database';
+import getPool from '@/database';
 import { NextRequest, NextResponse } from 'next/server';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 
@@ -19,6 +19,7 @@ function getUserIdFromRequest(req: NextRequest): number | null {
 
 export async function POST(req: NextRequest) {
   try {
+    const pool = getPool();
     const userId = getUserIdFromRequest(req);
     if (!userId) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
@@ -42,4 +43,4 @@ export async function POST(req: NextRequest) {
     console.error('账号注销失败:', error);
     return NextResponse.json({ error: '服务器异常，注销失败' }, { status: 500 });
   }
-} 
+}

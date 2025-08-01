@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/database';
+import getPool from '@/database';
 
 const schema = `
 CREATE TABLE users (
@@ -27,6 +27,7 @@ CREATE TABLE users (
 
 export async function GET() {
   try {
+    const pool = getPool();
     await pool.query(schema);
     return NextResponse.json({ message: 'Database initialized successfully' });
   } catch (error) {
