@@ -5,7 +5,7 @@ FROM node:20.16-alpine AS builder
 WORKDIR /app
 
 # 安装编译依赖
-RUN apk add --no-cache python3 
+RUN apk add --no-cache python3 make g++ git
 
 # 复制依赖文件
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
